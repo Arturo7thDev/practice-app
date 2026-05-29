@@ -25,7 +25,12 @@ export default function Home() {
   return (
     <main className="min-h-screen bg-zinc-950 text-zinc-50">
       <div className="mx-auto max-w-6xl px-6 py-10">
-        <Header connected={connected} />
+        <Header
+          connected={connected}
+          opportunitiesScanned={state?.counters.opportunitiesScanned ?? 0}
+          profitableDetected={state?.counters.profitableDetected ?? 0}
+          executedTrades={state?.stats.totalTrades ?? 0}
+        />
 
         <HeroStats stats={state?.stats} />
 
@@ -67,30 +72,56 @@ export default function Home() {
   );
 }
 
-function Header({ connected }: { connected: boolean }) {
+function Header({
+  connected,
+  opportunitiesScanned,
+  profitableDetected,
+  executedTrades,
+}: {
+  connected: boolean;
+  opportunitiesScanned: number;
+  profitableDetected: number;
+  executedTrades: number;
+}) {
   return (
-    <header className="mb-8 flex items-center justify-between">
-      <div>
-        <h1 className="text-3xl font-semibold tracking-tight">
-          Faro <span className="font-normal text-zinc-500">·</span>{" "}
-          <span className="font-normal text-zinc-400">
-            Honest BTC arbitrage
+    <header className="mb-8">
+      <div className="flex items-center justify-between">
+        <div>
+          <h1 className="text-3xl font-semibold tracking-tight">
+            Faro <span className="font-normal text-zinc-500">·</span>{" "}
+            <span className="font-normal text-zinc-400">
+              Honest BTC arbitrage
+            </span>
+          </h1>
+          <p className="mt-1 text-sm text-zinc-500">
+            Real-time detection across 3 exchanges. Executes only what survives
+            fees + slippage. Modeled at market-maker tier (
+            <span className="font-mono">0.02–0.04%</span>).
+          </p>
+        </div>
+        <div className="flex items-center gap-2 text-sm">
+          <span
+            className={`inline-block h-2 w-2 rounded-full ${
+              connected ? "animate-pulse bg-emerald-500" : "bg-zinc-600"
+            }`}
+          />
+          <span className="text-zinc-400">
+            {connected ? "live" : "connecting…"}
           </span>
-        </h1>
-        <p className="mt-1 text-sm text-zinc-500">
-          Real-time detection across 3 exchanges. Executes only what survives
-          fees + slippage. Modeled at institutional tier (
-          <span className="font-mono">0.05–0.15%</span>).
-        </p>
+        </div>
       </div>
-      <div className="flex items-center gap-2 text-sm">
-        <span
-          className={`inline-block h-2 w-2 rounded-full ${
-            connected ? "animate-pulse bg-emerald-500" : "bg-zinc-600"
-          }`}
-        />
-        <span className="text-zinc-400">
-          {connected ? "live" : "connecting…"}
+      <div className="mt-3 flex flex-wrap gap-x-6 gap-y-2 text-xs font-mono tabular-nums text-zinc-500">
+        <span>
+          <span className="text-zinc-300">{opportunitiesScanned.toLocaleString()}</span>{" "}
+          opportunities scanned
+        </span>
+        <span>
+          <span className="text-amber-400">{profitableDetected.toLocaleString()}</span>{" "}
+          profitable after fees
+        </span>
+        <span>
+          <span className="text-emerald-400">{executedTrades.toLocaleString()}</span>{" "}
+          executed
         </span>
       </div>
     </header>
@@ -442,9 +473,10 @@ function OpportunitiesTable({ opps }: { opps: Opportunity[] }) {
 function Footer() {
   return (
     <footer className="mt-12 border-t border-zinc-800 pt-6 text-xs text-zinc-500">
-      Faro models institutional tier (taker 0.05–0.15%, accessible to operators
-      with $1M+ monthly volume). At retail (0.5%), nearly zero opportunities
-      would be profitable — that&apos;s the gap most arbitrage promises ignore.
+      Faro models market-maker tier (taker 0.02–0.04%, accessible to operators
+      with $4B+ monthly volume — Binance VIP 9, Coinbase top tier). At retail
+      fees (0.5%), every single profitable opportunity above would become a
+      loss. That&apos;s the gap most arbitrage promises ignore.
     </footer>
   );
 }

@@ -68,12 +68,18 @@ export interface PortfolioStats {
   hypotheticalRetailLoss: number;
 }
 
+export interface ScanCounters {
+  opportunitiesScanned: number;
+  profitableDetected: number;
+}
+
 export interface FaroState {
   tickers: Ticker[];
   opportunities: Opportunity[];
   wallets: WalletBalance[];
   executedTrades: ExecutedTrade[];
   stats: PortfolioStats;
+  counters: ScanCounters;
   timestamp: number;
 }
 
