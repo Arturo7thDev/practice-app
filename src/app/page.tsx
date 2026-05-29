@@ -3,9 +3,11 @@
 import {
   useFaroStream,
   type ExchangeName,
+  type ExchangeStats,
   type ExecutedTrade,
   type Opportunity,
   type PortfolioStats,
+  type ScanCounters,
   type Ticker,
   type WalletBalance,
 } from "@/hooks/useFaroStream";
@@ -34,16 +36,22 @@ export default function Home() {
 
   return (
     <main className="min-h-screen bg-zinc-950 text-zinc-50">
-      <div className="mx-auto max-w-6xl px-6 py-10">
+      <div className="mx-auto max-w-6xl px-4 py-8 sm:px-6 sm:py-10">
         <Header
           connected={connected}
-          opportunitiesScanned={state?.counters.opportunitiesScanned ?? 0}
-          profitableDetected={state?.counters.profitableDetected ?? 0}
+          counters={state?.counters}
           executedTrades={state?.stats.totalTrades ?? 0}
-          skippedStale={state?.counters.skippedStaleData ?? 0}
         />
 
-        <HeroStats stats={state?.stats} />
+        <HeroStats stats={state?.stats} counters={state?.counters} />
+
+        <Section title="Strategy intelligence">
+          <StrategyPanel stats={state?.stats} />
+        </Section>
+
+        <Section title="Bot decisions · skip breakdown">
+          <DecisionsPanel counters={state?.counters} />
+        </Section>
 
         <Section title="P&L equity curve">
           <EquityCurve trades={state?.executedTrades ?? []} />
@@ -56,6 +64,9 @@ export default function Home() {
                 key={ex}
                 exchange={ex}
                 ticker={state?.tickers.find((t) => t.exchange === ex)}
+                exchangeStats={state?.exchangeStats.find(
+                  (s) => s.exchange === ex,
+                )}
               />
             ))}
           </div>
@@ -89,20 +100,16 @@ export default function Home() {
 
 function Header({
   connected,
-  opportunitiesScanned,
-  profitableDetected,
+  counters,
   executedTrades,
-  skippedStale,
 }: {
   connected: boolean;
-  opportunitiesScanned: number;
-  profitableDetected: number;
+  counters: ScanCounters | undefined;
   executedTrades: number;
-  skippedStale: number;
 }) {
   return (
     <header className="mb-8">
-      <div className="flex items-center justify-between">
+      <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
         <div>
           <h1 className="text-3xl font-semibold tracking-tight">
             Faro <span className="font-normal text-zinc-500">·</span>{" "}
@@ -127,130 +134,47 @@ function Header({
           </span>
         </div>
       </div>
-      <div className="mt-3 flex flex-wrap gap-x-6 gap-y-2 text-xs font-mono tabular-nums text-zinc-500">
+      <div className="mt-3 flex flex-wrap gap-x-6 gap-y-2 font-mono text-xs tabular-nums text-zinc-500">
         <span>
-          <span className="text-zinc-300">{opportunitiesScanned.toLocaleString()}</span>{" "}
-          opportunities scanned
+          <span className="text-zinc-300">
+            {(counters?.opportunitiesScanned ?? 0).toLocaleString()}
+          </span>{" "}
+          scanned
         </span>
         <span>
-          <span className="text-amber-400">{profitableDetected.toLocaleString()}</span>{" "}
-          profitable after fees
+          <span className="text-amber-400">
+            {(counters?.profitableDetected ?? 0).toLocaleString()}
+          </span>{" "}
+          profitable
         </span>
         <span>
-          <span className="text-emerald-400">{executedTrades.toLocaleString()}</span>{" "}
+          <span className="text-emerald-400">
+            {executedTrades.toLocaleString()}
+          </span>{" "}
           executed
-        </span>
-        <span>
-          <span className="text-zinc-400">{skippedStale.toLocaleString()}</span>{" "}
-          skipped (stale data)
         </span>
       </div>
     </header>
   );
 }
 
-function EquityCurve({ trades }: { trades: ExecutedTrade[] }) {
-  // trades vienen del más nuevo al más viejo; los revertimos para acumular cronológicamente
-  const data = [...trades]
-    .reverse()
-    .reduce<{ time: string; pnl: number; ts: number }[]>((acc, t) => {
-      const prev = acc.length > 0 ? acc[acc.length - 1].pnl : 0;
-      acc.push({
-        time: new Date(t.timestamp).toLocaleTimeString("en-US", {
-          hour12: false,
-        }),
-        pnl: prev + t.netProfit,
-        ts: t.timestamp,
-      });
-      return acc;
-    }, []);
-
-  if (data.length === 0) {
-    return (
-      <div className="rounded-lg border border-zinc-800 bg-zinc-900 p-8 text-center text-sm text-zinc-500">
-        Equity curve will appear after the first executed trade.
-      </div>
-    );
-  }
-
-  const finalPnL = data[data.length - 1].pnl;
-  const isPositive = finalPnL >= 0;
-  const lineColor = isPositive ? "#34d399" : "#f87171"; // emerald-400 / red-400
-
-  return (
-    <div className="rounded-lg border border-zinc-800 bg-zinc-900 p-4">
-      <div className="mb-2 flex items-baseline justify-between">
-        <span className="text-xs uppercase tracking-wide text-zinc-500">
-          Cumulative net P&amp;L · {data.length} trades
-        </span>
-        <span
-          className={`font-mono tabular-nums text-lg font-semibold ${
-            isPositive ? "text-emerald-400" : "text-red-400"
-          }`}
-        >
-          {isPositive ? "+" : ""}${finalPnL.toFixed(2)}
-        </span>
-      </div>
-      <div className="h-64 w-full">
-        <ResponsiveContainer width="100%" height="100%">
-          <LineChart
-            data={data}
-            margin={{ top: 8, right: 8, bottom: 8, left: 8 }}
-          >
-            <CartesianGrid strokeDasharray="3 3" stroke="#27272a" />
-            <XAxis
-              dataKey="time"
-              tick={{ fill: "#71717a", fontSize: 11 }}
-              tickLine={{ stroke: "#3f3f46" }}
-              axisLine={{ stroke: "#3f3f46" }}
-              minTickGap={40}
-            />
-            <YAxis
-              tick={{ fill: "#71717a", fontSize: 11 }}
-              tickLine={{ stroke: "#3f3f46" }}
-              axisLine={{ stroke: "#3f3f46" }}
-              tickFormatter={(v: number) => `$${v.toFixed(2)}`}
-            />
-            <Tooltip
-              contentStyle={{
-                background: "#18181b",
-                border: "1px solid #3f3f46",
-                borderRadius: 8,
-                fontSize: 12,
-              }}
-              labelStyle={{ color: "#a1a1aa" }}
-              formatter={(value) => [
-                `$${Number(value).toFixed(2)}`,
-                "Cumulative P&L",
-              ]}
-            />
-            <ReferenceLine y={0} stroke="#52525b" strokeDasharray="4 4" />
-            <Line
-              type="monotone"
-              dataKey="pnl"
-              stroke={lineColor}
-              strokeWidth={2}
-              dot={false}
-            />
-          </LineChart>
-        </ResponsiveContainer>
-      </div>
-    </div>
-  );
-}
-
-function HeroStats({ stats }: { stats: PortfolioStats | undefined }) {
+function HeroStats({
+  stats,
+  counters,
+}: {
+  stats: PortfolioStats | undefined;
+  counters: ScanCounters | undefined;
+}) {
   const profit = stats?.totalArbitrageProfit ?? 0;
   const retailLoss = stats?.hypotheticalRetailLoss ?? 0;
+  const lostOpp = counters?.lostOpportunityUSD ?? 0;
 
   return (
-    <section className="mb-10 grid grid-cols-1 gap-4 md:grid-cols-3">
+    <section className="mb-10 grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-4">
       <StatCard
-        label="Faro arbitrage profit"
+        label="Faro profit"
         value={
-          stats
-            ? `${profit >= 0 ? "+" : ""}$${profit.toFixed(2)}`
-            : "—"
+          stats ? `${profit >= 0 ? "+" : ""}$${profit.toFixed(2)}` : "—"
         }
         valueClass={
           stats
@@ -263,12 +187,12 @@ function HeroStats({ stats }: { stats: PortfolioStats | undefined }) {
         }
         subtitle={
           stats
-            ? `${stats.totalTrades} trades · institutional fees`
+            ? `${stats.totalTrades} trades · inst. fees`
             : "Waiting for data…"
         }
       />
       <StatCard
-        label="Same trades at retail (0.5%)"
+        label="Same at retail (0.5%)"
         value={
           stats
             ? `${retailLoss >= 0 ? "+" : ""}$${retailLoss.toFixed(2)}`
@@ -282,6 +206,12 @@ function HeroStats({ stats }: { stats: PortfolioStats | undefined }) {
             : "text-zinc-600"
         }
         subtitle="What a retail bot would yield"
+      />
+      <StatCard
+        label="Lost to cooldown"
+        value={counters ? `$${lostOpp.toFixed(2)}` : "—"}
+        valueClass="text-amber-400"
+        subtitle="Profitable opps blocked by 5s throttle"
       />
       <StatCard
         label="Portfolio value"
@@ -321,7 +251,7 @@ function StatCard({
           {label}
         </div>
         <div
-          className={`mt-2 font-mono text-3xl font-semibold tabular-nums ${valueClass}`}
+          className={`mt-2 font-mono text-2xl font-semibold tabular-nums lg:text-3xl ${valueClass}`}
         >
           {value}
         </div>
@@ -350,12 +280,167 @@ function Section({
   );
 }
 
+function StrategyPanel({ stats }: { stats: PortfolioStats | undefined }) {
+  if (!stats) {
+    return (
+      <div className="rounded-lg border border-zinc-800 bg-zinc-900 p-6 text-sm text-zinc-500">
+        Computing strategy metrics…
+      </div>
+    );
+  }
+  const successPct = (stats.successRate * 100).toFixed(2);
+  const avgNet = stats.avgNetPerTrade;
+  const best = stats.bestRoute;
+  const latency = stats.avgEvalLatencyMs;
+
+  return (
+    <div className="grid grid-cols-2 gap-4 lg:grid-cols-4">
+      <MetricBox
+        label="Success rate"
+        value={`${successPct}%`}
+        subtitle="profitable / scanned"
+        valueClass="text-emerald-400"
+      />
+      <MetricBox
+        label="Avg net / trade"
+        value={
+          stats.totalTrades > 0
+            ? `${avgNet >= 0 ? "+" : ""}$${avgNet.toFixed(4)}`
+            : "—"
+        }
+        subtitle={`${stats.totalTrades} executed`}
+        valueClass={avgNet >= 0 ? "text-emerald-400" : "text-red-400"}
+      />
+      <MetricBox
+        label="Best route"
+        value={best ? `+$${best.totalProfit.toFixed(2)}` : "—"}
+        subtitle={best ? `${best.route} · ${best.count} trades` : "no data"}
+        valueClass="text-emerald-400"
+      />
+      <MetricBox
+        label="Eval latency"
+        value={`${latency.toFixed(2)} ms`}
+        subtitle="avg per ticker processed"
+        valueClass="text-zinc-100"
+      />
+    </div>
+  );
+}
+
+function MetricBox({
+  label,
+  value,
+  subtitle,
+  valueClass,
+}: {
+  label: string;
+  value: string;
+  subtitle: string;
+  valueClass: string;
+}) {
+  return (
+    <div className="rounded-lg border border-zinc-800 bg-zinc-900 p-4">
+      <div className="text-xs uppercase tracking-wide text-zinc-500">
+        {label}
+      </div>
+      <div
+        className={`mt-1 font-mono text-xl font-semibold tabular-nums ${valueClass}`}
+      >
+        {value}
+      </div>
+      <div className="mt-1 text-xs text-zinc-500">{subtitle}</div>
+    </div>
+  );
+}
+
+function DecisionsPanel({ counters }: { counters: ScanCounters | undefined }) {
+  if (!counters) {
+    return (
+      <div className="rounded-lg border border-zinc-800 bg-zinc-900 p-6 text-sm text-zinc-500">
+        —
+      </div>
+    );
+  }
+  const totalSkipped =
+    counters.skippedSuspicious +
+    counters.skippedStaleData +
+    counters.skippedCooldown +
+    counters.skippedInsufficientCapital;
+
+  return (
+    <div className="grid grid-cols-2 gap-3 lg:grid-cols-4">
+      <SkipBox
+        label="Cooldown"
+        value={counters.skippedCooldown}
+        color="text-amber-400"
+        subtitle="5s per pair throttle"
+      />
+      <SkipBox
+        label="Suspicious"
+        value={counters.skippedSuspicious}
+        color="text-red-400"
+        subtitle="spread > 2% (circuit breaker)"
+      />
+      <SkipBox
+        label="Stale data"
+        value={counters.skippedStaleData}
+        color="text-zinc-400"
+        subtitle="ticker > 10s old"
+      />
+      <SkipBox
+        label="No capital"
+        value={counters.skippedInsufficientCapital}
+        color="text-zinc-400"
+        subtitle="wallet exhausted"
+      />
+      <div className="col-span-2 rounded-lg border border-zinc-800 bg-zinc-900 p-4 lg:col-span-4">
+        <div className="flex items-baseline justify-between">
+          <div className="text-xs uppercase tracking-wide text-zinc-500">
+            Total profitable opps skipped
+          </div>
+          <div className="font-mono text-xs text-zinc-400 tabular-nums">
+            {totalSkipped.toLocaleString()} decisions
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+function SkipBox({
+  label,
+  value,
+  color,
+  subtitle,
+}: {
+  label: string;
+  value: number;
+  color: string;
+  subtitle: string;
+}) {
+  return (
+    <div className="rounded-lg border border-zinc-800 bg-zinc-900 p-3">
+      <div className="text-xs uppercase tracking-wide text-zinc-500">
+        {label}
+      </div>
+      <div
+        className={`mt-1 font-mono text-lg font-semibold tabular-nums ${color}`}
+      >
+        {value.toLocaleString()}
+      </div>
+      <div className="mt-0.5 text-[10px] text-zinc-600">{subtitle}</div>
+    </div>
+  );
+}
+
 function ExchangeCard({
   exchange,
   ticker,
+  exchangeStats,
 }: {
   exchange: ExchangeName;
   ticker: Ticker | undefined;
+  exchangeStats: ExchangeStats | undefined;
 }) {
   const isStale = ticker?.stale ?? false;
   return (
@@ -383,9 +468,17 @@ function ExchangeCard({
           value={ticker?.ask}
           colorOnFresh={isStale ? "text-zinc-500" : "text-red-400"}
         />
-        <div className="pt-2 text-xs text-zinc-500">
-          spread{" "}
-          {ticker ? `$${(ticker.ask - ticker.bid).toFixed(2)}` : "—"}
+        <div className="flex justify-between pt-2 text-xs text-zinc-500">
+          <span>
+            spread{" "}
+            {ticker ? `$${(ticker.ask - ticker.bid).toFixed(2)}` : "—"}
+          </span>
+          {exchangeStats ? (
+            <span>
+              {exchangeStats.ticksPerSecond.toFixed(1)} t/s ·{" "}
+              {exchangeStats.ticksReceived.toLocaleString()} total
+            </span>
+          ) : null}
         </div>
       </CardContent>
     </Card>
@@ -455,6 +548,95 @@ function WalletCard({
   );
 }
 
+function EquityCurve({ trades }: { trades: ExecutedTrade[] }) {
+  const data = [...trades]
+    .reverse()
+    .reduce<{ time: string; pnl: number; ts: number }[]>((acc, t) => {
+      const prev = acc.length > 0 ? acc[acc.length - 1].pnl : 0;
+      acc.push({
+        time: new Date(t.timestamp).toLocaleTimeString("en-US", {
+          hour12: false,
+        }),
+        pnl: prev + t.netProfit,
+        ts: t.timestamp,
+      });
+      return acc;
+    }, []);
+
+  if (data.length === 0) {
+    return (
+      <div className="rounded-lg border border-zinc-800 bg-zinc-900 p-8 text-center text-sm text-zinc-500">
+        Equity curve will appear after the first executed trade.
+      </div>
+    );
+  }
+
+  const finalPnL = data[data.length - 1].pnl;
+  const isPositive = finalPnL >= 0;
+  const lineColor = isPositive ? "#34d399" : "#f87171";
+
+  return (
+    <div className="rounded-lg border border-zinc-800 bg-zinc-900 p-4">
+      <div className="mb-2 flex items-baseline justify-between">
+        <span className="text-xs uppercase tracking-wide text-zinc-500">
+          Cumulative net P&amp;L · {data.length} trades
+        </span>
+        <span
+          className={`font-mono tabular-nums text-lg font-semibold ${
+            isPositive ? "text-emerald-400" : "text-red-400"
+          }`}
+        >
+          {isPositive ? "+" : ""}${finalPnL.toFixed(2)}
+        </span>
+      </div>
+      <div className="h-64 w-full">
+        <ResponsiveContainer width="100%" height="100%">
+          <LineChart
+            data={data}
+            margin={{ top: 8, right: 8, bottom: 8, left: 8 }}
+          >
+            <CartesianGrid strokeDasharray="3 3" stroke="#27272a" />
+            <XAxis
+              dataKey="time"
+              tick={{ fill: "#71717a", fontSize: 11 }}
+              tickLine={{ stroke: "#3f3f46" }}
+              axisLine={{ stroke: "#3f3f46" }}
+              minTickGap={40}
+            />
+            <YAxis
+              tick={{ fill: "#71717a", fontSize: 11 }}
+              tickLine={{ stroke: "#3f3f46" }}
+              axisLine={{ stroke: "#3f3f46" }}
+              tickFormatter={(v: number) => `$${v.toFixed(2)}`}
+            />
+            <Tooltip
+              contentStyle={{
+                background: "#18181b",
+                border: "1px solid #3f3f46",
+                borderRadius: 8,
+                fontSize: 12,
+              }}
+              labelStyle={{ color: "#a1a1aa" }}
+              formatter={(value) => [
+                `$${Number(value).toFixed(2)}`,
+                "Cumulative P&L",
+              ]}
+            />
+            <ReferenceLine y={0} stroke="#52525b" strokeDasharray="4 4" />
+            <Line
+              type="monotone"
+              dataKey="pnl"
+              stroke={lineColor}
+              strokeWidth={2}
+              dot={false}
+            />
+          </LineChart>
+        </ResponsiveContainer>
+      </div>
+    </div>
+  );
+}
+
 function TradesTable({ trades }: { trades: ExecutedTrade[] }) {
   if (trades.length === 0) {
     return (
@@ -466,7 +648,7 @@ function TradesTable({ trades }: { trades: ExecutedTrade[] }) {
   }
 
   return (
-    <div className="overflow-hidden rounded-lg border border-zinc-800 bg-zinc-900">
+    <div className="overflow-x-auto rounded-lg border border-zinc-800 bg-zinc-900">
       <table className="w-full text-sm">
         <thead className="bg-zinc-900/80 text-xs uppercase text-zinc-500">
           <tr>
@@ -533,7 +715,7 @@ function OpportunitiesTable({ opps }: { opps: Opportunity[] }) {
   }
 
   return (
-    <div className="overflow-hidden rounded-lg border border-zinc-800 bg-zinc-900">
+    <div className="overflow-x-auto rounded-lg border border-zinc-800 bg-zinc-900">
       <table className="w-full text-sm">
         <thead className="bg-zinc-900/80 text-xs uppercase text-zinc-500">
           <tr>

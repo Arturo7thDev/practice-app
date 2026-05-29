@@ -60,6 +60,31 @@ export interface ExecutedTrade {
   retailNetProfit: number;
 }
 
+export interface ScanCounters {
+  opportunitiesScanned: number;
+  profitableDetected: number;
+  skippedSuspicious: number;
+  skippedStaleData: number;
+  skippedCooldown: number;
+  skippedInsufficientCapital: number;
+  lostOpportunityUSD: number;
+}
+
+export interface RoutePerformance {
+  route: string;
+  count: number;
+  totalProfit: number;
+  avgProfit: number;
+}
+
+export interface ExchangeStats {
+  exchange: ExchangeName;
+  ticksReceived: number;
+  ticksPerSecond: number;
+  avgIntervalMs: number;
+  uptimeSeconds: number;
+}
+
 export interface PortfolioStats {
   initialCapitalUSDT: number;
   initialBTC: number;
@@ -69,12 +94,11 @@ export interface PortfolioStats {
   currentBTCPrice: number;
   currentPortfolioValueUSDT: number;
   hypotheticalRetailLoss: number;
-}
-
-export interface ScanCounters {
-  opportunitiesScanned: number;
-  profitableDetected: number;
-  skippedStaleData: number;
+  successRate: number;
+  avgNetPerTrade: number;
+  bestRoute: RoutePerformance | null;
+  worstRoute: RoutePerformance | null;
+  avgEvalLatencyMs: number;
 }
 
 export interface FaroState {
@@ -84,6 +108,7 @@ export interface FaroState {
   executedTrades: ExecutedTrade[];
   stats: PortfolioStats;
   counters: ScanCounters;
+  exchangeStats: ExchangeStats[];
   timestamp: number;
 }
 
