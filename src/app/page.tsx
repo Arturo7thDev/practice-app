@@ -55,6 +55,8 @@ export default function Home() {
           executedTrades={state?.stats.totalTrades ?? 0}
         />
 
+        <DifferentiatorBanner />
+
         <HeroStats stats={state?.stats} counters={state?.counters} />
 
         <Section title="Strategy intelligence">
@@ -182,8 +184,17 @@ function HeroStats({
   const retailLoss = stats?.hypotheticalRetailLoss ?? 0;
   const lostOpp = counters?.lostOpportunityUSD ?? 0;
 
+  const profitable = counters?.profitableDetected ?? 0;
+  const executed = stats?.totalTrades ?? 0;
+  const captureRate = profitable > 0 ? (executed / profitable) * 100 : 0;
+  const safeSkipped =
+    (counters?.skippedSuspicious ?? 0) + (counters?.skippedStaleData ?? 0);
+  const throttled = counters?.skippedCooldown ?? 0;
+  const safePct = profitable > 0 ? (safeSkipped / profitable) * 100 : 0;
+  const throttlePct = profitable > 0 ? (throttled / profitable) * 100 : 0;
+
   return (
-    <section className="mb-10 grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-4">
+    <section className="mb-10 grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-5">
       <StatCard
         label="Faro profit"
         value={
@@ -221,10 +232,20 @@ function HeroStats({
         subtitle="What a retail bot would yield"
       />
       <StatCard
+        label="Decision accuracy"
+        value={counters ? `${captureRate.toFixed(0)}%` : "—"}
+        valueClass="text-emerald-400"
+        subtitle={
+          counters
+            ? `captured · ${safePct.toFixed(0)}% safety · ${throttlePct.toFixed(0)}% throttled`
+            : "of profitable opps"
+        }
+      />
+      <StatCard
         label="Lost to cooldown"
         value={counters ? `$${lostOpp.toFixed(2)}` : "—"}
         valueClass="text-amber-400"
-        subtitle="Profitable opps blocked by 5s throttle"
+        subtitle="Profit blocked by 3s throttle"
       />
       <StatCard
         label="Portfolio value"
@@ -243,6 +264,26 @@ function HeroStats({
         }
       />
     </section>
+  );
+}
+
+function DifferentiatorBanner() {
+  return (
+    <div className="mb-8 rounded-lg border border-zinc-800 bg-gradient-to-r from-zinc-900 to-zinc-900/50 p-4">
+      <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:gap-4">
+        <span className="shrink-0 self-start rounded-full bg-emerald-500/10 px-2 py-1 text-xs font-medium uppercase tracking-wide text-emerald-400">
+          4-stack cost model
+        </span>
+        <p className="text-sm text-zinc-400">
+          Faro discounts <span className="text-zinc-200">trading fees</span> +{" "}
+          <span className="text-zinc-200">amortized withdrawal</span> +{" "}
+          <span className="text-zinc-200">estimated slippage</span> +{" "}
+          <span className="text-zinc-200">network latency</span> from every
+          opportunity. Most arbitrage bots only count trading fees — that&apos;s
+          why their &ldquo;profit&rdquo; vanishes in reality.
+        </p>
+      </div>
+    </div>
   );
 }
 
