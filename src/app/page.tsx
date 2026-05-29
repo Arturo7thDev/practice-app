@@ -246,23 +246,31 @@ function ExchangeCard({
   exchange: ExchangeName;
   ticker: Ticker | undefined;
 }) {
+  const isStale = ticker?.stale ?? false;
   return (
-    <Card className="border-zinc-800 bg-zinc-900 text-zinc-50">
+    <Card
+      className={`border-zinc-800 bg-zinc-900 text-zinc-50 ${isStale ? "opacity-50" : ""}`}
+    >
       <CardHeader className="pb-2">
-        <CardTitle className="text-sm font-medium uppercase tracking-wide text-zinc-400">
-          {EXCHANGE_LABEL[exchange]}
+        <CardTitle className="flex items-center justify-between text-sm font-medium uppercase tracking-wide text-zinc-400">
+          <span>{EXCHANGE_LABEL[exchange]}</span>
+          {isStale ? (
+            <span className="rounded-full bg-amber-500/10 px-2 py-0.5 text-xs font-medium normal-case text-amber-400">
+              stale · {ticker ? `${(ticker.ageMs / 1000).toFixed(0)}s ago` : ""}
+            </span>
+          ) : null}
         </CardTitle>
       </CardHeader>
       <CardContent className="space-y-1 font-mono tabular-nums">
         <PriceRow
           label="bid"
           value={ticker?.bid}
-          colorOnFresh="text-emerald-400"
+          colorOnFresh={isStale ? "text-zinc-500" : "text-emerald-400"}
         />
         <PriceRow
           label="ask"
           value={ticker?.ask}
-          colorOnFresh="text-red-400"
+          colorOnFresh={isStale ? "text-zinc-500" : "text-red-400"}
         />
         <div className="pt-2 text-xs text-zinc-500">
           spread{" "}
@@ -452,7 +460,11 @@ function OpportunitiesTable({ opps }: { opps: Opportunity[] }) {
                 {o.retailNetProfit.toFixed(2)}
               </td>
               <td className="px-4 py-2 text-right">
-                {o.profitable ? (
+                {o.suspicious ? (
+                  <span className="rounded-full bg-amber-500/10 px-2 py-1 text-xs font-medium text-amber-400">
+                    SUSPICIOUS
+                  </span>
+                ) : o.profitable ? (
                   <span className="rounded-full bg-emerald-500/10 px-2 py-1 text-xs font-medium text-emerald-400">
                     RENTABLE
                   </span>

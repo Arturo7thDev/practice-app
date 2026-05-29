@@ -12,6 +12,8 @@ export interface Ticker {
   bidQty: number;
   askQty: number;
   timestamp: number;
+  stale: boolean;
+  ageMs: number;
 }
 
 export interface Opportunity {
@@ -29,6 +31,7 @@ export interface Opportunity {
   netProfit: number;
   netSpread: number;
   profitable: boolean;
+  suspicious: boolean;
   retailFees: number;
   retailNetProfit: number;
 }
