@@ -1,65 +1,151 @@
-import Image from "next/image";
+"use client";
+
+import { useState } from "react";
+import Decimal from "decimal.js";
+import {
+  CartesianGrid,
+  Line,
+  LineChart,
+  ResponsiveContainer,
+  Tooltip,
+  XAxis,
+  YAxis,
+} from "recharts";
+import { Input } from "@/components/ui/input";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 
 export default function Home() {
+  const [capital, setCapital] = useState("1000");
+  const [tasa, setTasa] = useState("5");
+  const [anios, setAnios] = useState("10");
+
+  // Dos valores derivados del estado: el resumen y la serie año a año
+  const resultado = calcularInteresCompuesto(capital, tasa, anios);
+  const datos = generarDatosAnuales(capital, tasa, anios);
+
   return (
-    <div className="flex flex-col flex-1 items-center justify-center bg-zinc-50 font-sans dark:bg-black">
-      <main className="flex flex-1 w-full max-w-3xl flex-col items-center justify-between py-32 px-16 bg-white dark:bg-black sm:items-start">
-        <Image
-          className="dark:invert"
-          src="/next.svg"
-          alt="Next.js logo"
-          width={100}
-          height={20}
-          priority
-        />
-        <div className="flex flex-col items-center gap-6 text-center sm:items-start sm:text-left">
-          <h1 className="max-w-xs text-3xl font-semibold leading-10 tracking-tight text-black dark:text-zinc-50">
-            To get started, edit the page.tsx file.
-          </h1>
-          <p className="max-w-md text-lg leading-8 text-zinc-600 dark:text-zinc-400">
-            Looking for a starting point or more instructions? Head over to{" "}
-            <a
-              href="https://vercel.com/templates?framework=next.js&utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-              className="font-medium text-zinc-950 dark:text-zinc-50"
-            >
-              Templates
-            </a>{" "}
-            or the{" "}
-            <a
-              href="https://nextjs.org/learn?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-              className="font-medium text-zinc-950 dark:text-zinc-50"
-            >
-              Learning
-            </a>{" "}
-            center.
-          </p>
+    <main className="flex min-h-screen flex-col items-center justify-center gap-6 p-8">
+      <h1 className="text-4xl font-bold">Calculadora de interés compuesto</h1>
+
+      <div className="flex w-full max-w-md flex-col gap-4">
+        <div className="flex flex-col gap-1">
+          <label className="text-sm font-medium">Capital inicial ($)</label>
+          <Input
+            type="number"
+            value={capital}
+            onChange={(e) => setCapital(e.target.value)}
+          />
         </div>
-        <div className="flex flex-col gap-4 text-base font-medium sm:flex-row">
-          <a
-            className="flex h-12 w-full items-center justify-center gap-2 rounded-full bg-foreground px-5 text-background transition-colors hover:bg-[#383838] dark:hover:bg-[#ccc] md:w-[158px]"
-            href="https://vercel.com/new?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            <Image
-              className="dark:invert"
-              src="/vercel.svg"
-              alt="Vercel logomark"
-              width={16}
-              height={16}
-            />
-            Deploy Now
-          </a>
-          <a
-            className="flex h-12 w-full items-center justify-center rounded-full border border-solid border-black/[.08] px-5 transition-colors hover:border-transparent hover:bg-black/[.04] dark:border-white/[.145] dark:hover:bg-[#1a1a1a] md:w-[158px]"
-            href="https://nextjs.org/docs?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            Documentation
-          </a>
+
+        <div className="flex flex-col gap-1">
+          <label className="text-sm font-medium">Tasa anual (%)</label>
+          <Input
+            type="number"
+            value={tasa}
+            onChange={(e) => setTasa(e.target.value)}
+          />
         </div>
-      </main>
-    </div>
+
+        <div className="flex flex-col gap-1">
+          <label className="text-sm font-medium">Años</label>
+          <Input
+            type="number"
+            value={anios}
+            onChange={(e) => setAnios(e.target.value)}
+          />
+        </div>
+      </div>
+
+      <Card className="w-full max-w-2xl">
+        <CardHeader>
+          <CardTitle>Resultado</CardTitle>
+        </CardHeader>
+        <CardContent className="space-y-4">
+          <div className="space-y-1">
+            <div className="text-sm text-zinc-600">Capital final:</div>
+            <div className="text-3xl font-bold tabular-nums">
+              ${resultado.final}
+            </div>
+            <div className="text-sm text-zinc-600">
+              Ganancia:{" "}
+              <span className="font-medium text-green-600">
+                +${resultado.ganancia}
+              </span>
+            </div>
+          </div>
+
+          <div className="h-72 w-full">
+            <ResponsiveContainer width="100%" height="100%">
+              <LineChart
+                data={datos}
+                margin={{ top: 8, right: 16, bottom: 8, left: 8 }}
+              >
+                <CartesianGrid strokeDasharray="3 3" stroke="#e4e4e7" />
+                <XAxis
+                  dataKey="anio"
+                  label={{ value: "Año", position: "insideBottom", offset: -4 }}
+                />
+                <YAxis
+                  tickFormatter={(v: number) =>
+                    `$${v.toLocaleString("en-US", { maximumFractionDigits: 0 })}`
+                  }
+                />
+                <Tooltip
+                  formatter={(value) => [
+                    `$${Number(value).toFixed(2)}`,
+                    "Capital",
+                  ]}
+                  labelFormatter={(label) => `Año ${label}`}
+                />
+                <Line
+                  type="monotone"
+                  dataKey="valor"
+                  stroke="#16a34a"
+                  strokeWidth={2}
+                  dot={false}
+                />
+              </LineChart>
+            </ResponsiveContainer>
+          </div>
+        </CardContent>
+      </Card>
+    </main>
   );
+}
+
+function calcularInteresCompuesto(
+  capital: string,
+  tasa: string,
+  anios: string,
+) {
+  try {
+    const p = new Decimal(capital || "0");
+    const r = new Decimal(tasa || "0").div(100);
+    const t = new Decimal(anios || "0");
+    const final = p.mul(new Decimal(1).plus(r).pow(t));
+    const ganancia = final.minus(p);
+    return {
+      final: final.toFixed(2),
+      ganancia: ganancia.toFixed(2),
+    };
+  } catch {
+    return { final: "0.00", ganancia: "0.00" };
+  }
+}
+
+function generarDatosAnuales(capital: string, tasa: string, anios: string) {
+  try {
+    const p = new Decimal(capital || "0");
+    const r = new Decimal(tasa || "0").div(100);
+    const t = Math.max(0, Math.min(100, parseInt(anios || "0", 10)));
+    return Array.from({ length: t + 1 }, (_, i) => {
+      const valor = p.mul(new Decimal(1).plus(r).pow(i));
+      return {
+        anio: i,
+        valor: parseFloat(valor.toFixed(2)),
+      };
+    });
+  } catch {
+    return [];
+  }
 }
