@@ -41,7 +41,7 @@ export default function Home() {
           </div>
         </Section>
 
-        <Section title="Wallet balances">
+        <Section title="Wallet balances (initial: $50K USDT + 0.5 BTC each)">
           <div className="grid grid-cols-1 gap-4 md:grid-cols-3">
             {EXCHANGES.map((ex) => (
               <WalletCard
@@ -53,13 +53,15 @@ export default function Home() {
           </div>
         </Section>
 
-        <Section title="Executed trades">
+        <Section title="Executed trades · Faro (institutional) vs Retail (0.5%)">
           <TradesTable trades={state?.executedTrades ?? []} />
         </Section>
 
         <Section title="Opportunities evaluated (real-time)">
           <OpportunitiesTable opps={state?.opportunities ?? []} />
         </Section>
+
+        <Footer />
       </div>
     </main>
   );
@@ -77,7 +79,8 @@ function Header({ connected }: { connected: boolean }) {
         </h1>
         <p className="mt-1 text-sm text-zinc-500">
           Real-time detection across 3 exchanges. Executes only what survives
-          fees + slippage.
+          fees + slippage. Modeled at institutional tier (
+          <span className="font-mono">0.05–0.15%</span>).
         </p>
       </div>
       <div className="flex items-center gap-2 text-sm">
@@ -96,12 +99,12 @@ function Header({ connected }: { connected: boolean }) {
 
 function HeroStats({ stats }: { stats: PortfolioStats | undefined }) {
   const profit = stats?.totalArbitrageProfit ?? 0;
-  const isPositive = profit > 0;
+  const retailLoss = stats?.hypotheticalRetailLoss ?? 0;
 
   return (
     <section className="mb-10 grid grid-cols-1 gap-4 md:grid-cols-3">
       <StatCard
-        label="Total arbitrage profit"
+        label="Faro arbitrage profit"
         value={
           stats
             ? `${profit >= 0 ? "+" : ""}$${profit.toFixed(2)}`
@@ -109,18 +112,34 @@ function HeroStats({ stats }: { stats: PortfolioStats | undefined }) {
         }
         valueClass={
           stats
-            ? isPositive
+            ? profit > 0
               ? "text-emerald-400"
               : profit < 0
                 ? "text-red-400"
-                : "text-zinc-300"
+                : "text-zinc-400"
             : "text-zinc-600"
         }
         subtitle={
           stats
-            ? `From ${stats.totalTrades} executed trades`
+            ? `${stats.totalTrades} trades · institutional fees`
             : "Waiting for data…"
         }
+      />
+      <StatCard
+        label="Same trades at retail (0.5%)"
+        value={
+          stats
+            ? `${retailLoss >= 0 ? "+" : ""}$${retailLoss.toFixed(2)}`
+            : "—"
+        }
+        valueClass={
+          stats
+            ? retailLoss < 0
+              ? "text-red-400"
+              : "text-zinc-400"
+            : "text-zinc-600"
+        }
+        subtitle="What a retail bot would yield"
       />
       <StatCard
         label="Portfolio value"
@@ -137,14 +156,6 @@ function HeroStats({ stats }: { stats: PortfolioStats | undefined }) {
             ? `Initial: $${stats.initialCapitalUSDT.toLocaleString()} + ${stats.initialBTC} BTC`
             : ""
         }
-      />
-      <StatCard
-        label="Total fees paid"
-        value={
-          stats ? `$${stats.totalFeesPaid.toFixed(2)}` : "—"
-        }
-        valueClass="text-zinc-300"
-        subtitle="Trading fees across all venues"
       />
     </section>
   );
@@ -298,8 +309,8 @@ function TradesTable({ trades }: { trades: ExecutedTrade[] }) {
   if (trades.length === 0) {
     return (
       <div className="rounded-lg border border-zinc-800 bg-zinc-900 p-8 text-center text-sm text-zinc-500">
-        No trades executed yet. The bot only executes opportunities profitable
-        AFTER fees — most candidates are mirages.
+        No trades executed yet. Faro is watching — only profitable opportunities
+        AFTER fees get executed. Most candidates are mirages.
       </div>
     );
   }
@@ -313,8 +324,12 @@ function TradesTable({ trades }: { trades: ExecutedTrade[] }) {
             <th className="px-4 py-3 text-left font-medium">Route</th>
             <th className="px-4 py-3 text-right font-medium">Vol (BTC)</th>
             <th className="px-4 py-3 text-right font-medium">Gross</th>
-            <th className="px-4 py-3 text-right font-medium">Fees</th>
-            <th className="px-4 py-3 text-right font-medium">Net P&amp;L</th>
+            <th className="px-4 py-3 text-right font-medium">
+              Faro net (inst)
+            </th>
+            <th className="px-4 py-3 text-right font-medium">
+              Net at retail
+            </th>
           </tr>
         </thead>
         <tbody className="font-mono tabular-nums">
@@ -339,11 +354,16 @@ function TradesTable({ trades }: { trades: ExecutedTrade[] }) {
               <td className="px-4 py-2 text-right text-zinc-400">
                 ${t.grossProfit.toFixed(2)}
               </td>
-              <td className="px-4 py-2 text-right text-zinc-500">
-                ${t.totalFees.toFixed(2)}
-              </td>
               <td className="px-4 py-2 text-right font-semibold text-emerald-400">
                 +${t.netProfit.toFixed(2)}
+              </td>
+              <td
+                className={`px-4 py-2 text-right font-semibold ${
+                  t.retailNetProfit < 0 ? "text-red-400" : "text-zinc-400"
+                }`}
+              >
+                {t.retailNetProfit >= 0 ? "+" : ""}$
+                {t.retailNetProfit.toFixed(2)}
               </td>
             </tr>
           ))}
@@ -370,8 +390,8 @@ function OpportunitiesTable({ opps }: { opps: Opportunity[] }) {
             <th className="px-4 py-3 text-left font-medium">Time</th>
             <th className="px-4 py-3 text-left font-medium">Route</th>
             <th className="px-4 py-3 text-right font-medium">Gross</th>
-            <th className="px-4 py-3 text-right font-medium">Fees</th>
-            <th className="px-4 py-3 text-right font-medium">Net</th>
+            <th className="px-4 py-3 text-right font-medium">Net (inst)</th>
+            <th className="px-4 py-3 text-right font-medium">Net (retail)</th>
             <th className="px-4 py-3 text-right font-medium">Verdict</th>
           </tr>
         </thead>
@@ -389,13 +409,16 @@ function OpportunitiesTable({ opps }: { opps: Opportunity[] }) {
               <td className="px-4 py-2 text-right text-zinc-400">
                 ${o.grossProfit.toFixed(2)}
               </td>
-              <td className="px-4 py-2 text-right text-zinc-500">
-                ${o.totalFees.toFixed(2)}
-              </td>
               <td
                 className={`px-4 py-2 text-right font-semibold ${o.profitable ? "text-emerald-400" : "text-red-400"}`}
               >
                 {o.netProfit >= 0 ? "+" : ""}${o.netProfit.toFixed(2)}
+              </td>
+              <td
+                className={`px-4 py-2 text-right ${o.retailNetProfit < 0 ? "text-red-400" : "text-zinc-400"}`}
+              >
+                {o.retailNetProfit >= 0 ? "+" : ""}$
+                {o.retailNetProfit.toFixed(2)}
               </td>
               <td className="px-4 py-2 text-right">
                 {o.profitable ? (
@@ -413,5 +436,15 @@ function OpportunitiesTable({ opps }: { opps: Opportunity[] }) {
         </tbody>
       </table>
     </div>
+  );
+}
+
+function Footer() {
+  return (
+    <footer className="mt-12 border-t border-zinc-800 pt-6 text-xs text-zinc-500">
+      Faro models institutional tier (taker 0.05–0.15%, accessible to operators
+      with $1M+ monthly volume). At retail (0.5%), nearly zero opportunities
+      would be profitable — that&apos;s the gap most arbitrage promises ignore.
+    </footer>
   );
 }

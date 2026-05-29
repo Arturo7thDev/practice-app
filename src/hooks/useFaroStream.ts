@@ -29,6 +29,8 @@ export interface Opportunity {
   netProfit: number;
   netSpread: number;
   profitable: boolean;
+  retailFees: number;
+  retailNetProfit: number;
 }
 
 export interface WalletBalance {
@@ -52,6 +54,7 @@ export interface ExecutedTrade {
   totalFees: number;
   grossProfit: number;
   netProfit: number;
+  retailNetProfit: number;
 }
 
 export interface PortfolioStats {
@@ -62,6 +65,7 @@ export interface PortfolioStats {
   totalFeesPaid: number;
   currentBTCPrice: number;
   currentPortfolioValueUSDT: number;
+  hypotheticalRetailLoss: number;
 }
 
 export interface FaroState {
