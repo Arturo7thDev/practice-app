@@ -3,12 +3,14 @@
 import {
   PAIRS,
   useFaroStream,
+  type Decision,
   type ExchangeName,
   type ExchangeStats,
   type ExecutedTrade,
   type Opportunity,
   type Pair,
   type PortfolioStats,
+  type RiskMetrics,
   type ScanCounters,
   type Ticker,
   type WalletBalance,
@@ -43,6 +45,22 @@ const PAIR_ACCENT: Record<Pair, string> = {
   "ETH/USDT": "text-violet-400",
 };
 
+const DECISION_COLOR: Record<Decision["outcome"], string> = {
+  executed: "text-emerald-400",
+  cooldown: "text-amber-400",
+  stale: "text-zinc-500",
+  suspicious: "text-red-400",
+  insufficient_capital: "text-zinc-500",
+};
+
+const DECISION_LABEL: Record<Decision["outcome"], string> = {
+  executed: "EXECUTED",
+  cooldown: "COOLDOWN",
+  stale: "STALE",
+  suspicious: "SUSPICIOUS",
+  insufficient_capital: "NO CAPITAL",
+};
+
 export default function Home() {
   const { state, connected } = useFaroStream();
 
@@ -69,6 +87,14 @@ export default function Home() {
 
         <Section title="Full cost breakdown · trading + withdrawal + slippage + latency">
           <CostBreakdown stats={state?.stats} />
+        </Section>
+
+        <Section title="Risk metrics · circuit breaker, drawdown, exposure">
+          <RiskPanel risk={state?.stats.risk} />
+        </Section>
+
+        <Section title="Live decisions · last 15 bot decisions in real-time">
+          <DecisionsFeed decisions={state?.decisions ?? []} />
         </Section>
 
         <Section title="P&L equity curve (both pairs combined)">
@@ -500,6 +526,121 @@ function DecisionsPanel({ counters }: { counters: ScanCounters | undefined }) {
             {totalSkipped.toLocaleString()} decisions
           </div>
         </div>
+      </div>
+    </div>
+  );
+}
+
+function RiskPanel({ risk }: { risk: RiskMetrics | undefined }) {
+  if (!risk) {
+    return (
+      <div className="rounded-lg border border-zinc-800 bg-zinc-900 p-6 text-sm text-zinc-500">
+        Risk metrics initializing…
+      </div>
+    );
+  }
+  return (
+    <div className="space-y-4">
+      <div className="grid grid-cols-2 gap-3 lg:grid-cols-4">
+        <MetricBox
+          label="Max drawdown"
+          value={`$${risk.maxDrawdownUSD.toFixed(2)}`}
+          subtitle={`${(risk.maxDrawdownPercent * 100).toFixed(1)}% from peak`}
+          valueClass={risk.maxDrawdownUSD > 0 ? "text-red-400" : "text-emerald-400"}
+        />
+        <MetricBox
+          label="Wallet imbalance"
+          value={`${(risk.walletImbalance * 100).toFixed(1)}%`}
+          subtitle="std dev / mean of USD/exchange"
+          valueClass={risk.walletImbalance > 0.2 ? "text-amber-400" : "text-emerald-400"}
+        />
+        <MetricBox
+          label="Capital deployed"
+          value={`${(risk.capitalDeployedPercent * 100).toFixed(1)}%`}
+          subtitle="trade vol / initial USDT"
+          valueClass="text-zinc-100"
+        />
+        <MetricBox
+          label="Circuit breaker"
+          value="ACTIVE"
+          subtitle="rejects spreads > 2%"
+          valueClass="text-emerald-400"
+        />
+      </div>
+      <div className="rounded-lg border border-zinc-800 bg-zinc-900 p-4">
+        <div className="mb-3 text-xs uppercase tracking-wide text-zinc-500">
+          Exposure per exchange
+        </div>
+        <div className="space-y-2">
+          {risk.exposureByExchange.map((e) => (
+            <div key={e.exchange} className="flex items-center gap-3">
+              <span className="w-24 text-xs uppercase text-zinc-400">
+                {EXCHANGE_LABEL[e.exchange]}
+              </span>
+              <div className="flex-1 overflow-hidden rounded-full bg-zinc-800">
+                <div
+                  className="h-2 bg-emerald-500/70"
+                  style={{ width: `${e.pctOfPortfolio * 100}%` }}
+                />
+              </div>
+              <span className="w-20 text-right font-mono text-xs tabular-nums text-zinc-300">
+                {(e.pctOfPortfolio * 100).toFixed(1)}%
+              </span>
+              <span className="w-28 text-right font-mono text-xs tabular-nums text-zinc-500">
+                $
+                {e.usdValue.toLocaleString("en-US", {
+                  maximumFractionDigits: 0,
+                })}
+              </span>
+              <span className="w-24 text-right font-mono text-[10px] tabular-nums text-zinc-600">
+                {(e.usdtPct * 100).toFixed(0)}% USDT
+              </span>
+            </div>
+          ))}
+        </div>
+      </div>
+    </div>
+  );
+}
+
+function DecisionsFeed({ decisions }: { decisions: Decision[] }) {
+  if (decisions.length === 0) {
+    return (
+      <div className="rounded-lg border border-zinc-800 bg-zinc-900 p-6 text-center text-sm text-zinc-500">
+        Decisions will appear here as the bot evaluates opportunities…
+      </div>
+    );
+  }
+  return (
+    <div className="overflow-hidden rounded-lg border border-zinc-800 bg-zinc-900">
+      <div className="divide-y divide-zinc-800">
+        {decisions.map((d, i) => (
+          <div
+            key={i}
+            className="flex items-center gap-4 px-4 py-2 font-mono text-xs"
+          >
+            <span className="text-zinc-500 tabular-nums">
+              {new Date(d.timestamp).toLocaleTimeString("en-US", {
+                hour12: false,
+              })}
+            </span>
+            <span
+              className={`w-24 font-semibold ${DECISION_COLOR[d.outcome]}`}
+            >
+              {DECISION_LABEL[d.outcome]}
+            </span>
+            <span className={`w-8 ${PAIR_ACCENT[d.pair]}`}>
+              {d.pair.split("/")[0]}
+            </span>
+            <span className="w-32 text-zinc-300">{d.route}</span>
+            <span
+              className={`w-24 text-right tabular-nums ${d.outcome === "executed" ? "text-emerald-400" : "text-zinc-500"}`}
+            >
+              {d.netProfit >= 0 ? "+" : ""}${d.netProfit.toFixed(3)}
+            </span>
+            <span className="flex-1 text-zinc-500">{d.reason}</span>
+          </div>
+        ))}
       </div>
     </div>
   );

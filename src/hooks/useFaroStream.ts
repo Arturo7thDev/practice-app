@@ -99,6 +99,21 @@ export interface ExchangeStats {
   networkLatencyAt: number;
 }
 
+export interface ExchangeExposure {
+  exchange: ExchangeName;
+  usdValue: number;
+  pctOfPortfolio: number;
+  usdtPct: number;
+}
+
+export interface RiskMetrics {
+  maxDrawdownUSD: number;
+  maxDrawdownPercent: number;
+  walletImbalance: number;
+  capitalDeployedPercent: number;
+  exposureByExchange: ExchangeExposure[];
+}
+
 export interface PortfolioStats {
   initialCapitalUSDT: number;
   initialBTC: number;
@@ -121,6 +136,21 @@ export interface PortfolioStats {
   avgEvalLatencyMs: number;
   profitByPair: Record<Pair, number>;
   tradesByPair: Record<Pair, number>;
+  risk: RiskMetrics;
+}
+
+export interface Decision {
+  timestamp: number;
+  pair: Pair;
+  route: string;
+  outcome:
+    | "executed"
+    | "stale"
+    | "cooldown"
+    | "suspicious"
+    | "insufficient_capital";
+  netProfit: number;
+  reason: string;
 }
 
 export interface FaroState {
@@ -131,6 +161,7 @@ export interface FaroState {
   stats: PortfolioStats;
   counters: ScanCounters;
   exchangeStats: ExchangeStats[];
+  decisions: Decision[];
   timestamp: number;
 }
 
