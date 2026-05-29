@@ -612,14 +612,14 @@ function DecisionsFeed({ decisions }: { decisions: Decision[] }) {
     );
   }
   return (
-    <div className="overflow-hidden rounded-lg border border-zinc-800 bg-zinc-900">
-      <div className="divide-y divide-zinc-800">
+    <div className="overflow-x-auto rounded-lg border border-zinc-800 bg-zinc-900">
+      <div className="min-w-[640px] divide-y divide-zinc-800">
         {decisions.map((d, i) => (
           <div
             key={i}
-            className="flex items-center gap-4 px-4 py-2 font-mono text-xs"
+            className="flex items-center gap-3 px-4 py-2 font-mono text-xs"
           >
-            <span className="text-zinc-500 tabular-nums">
+            <span className="w-16 text-zinc-500 tabular-nums">
               {new Date(d.timestamp).toLocaleTimeString("en-US", {
                 hour12: false,
               })}
@@ -634,11 +634,11 @@ function DecisionsFeed({ decisions }: { decisions: Decision[] }) {
             </span>
             <span className="w-32 text-zinc-300">{d.route}</span>
             <span
-              className={`w-24 text-right tabular-nums ${d.outcome === "executed" ? "text-emerald-400" : "text-zinc-500"}`}
+              className={`w-20 text-right tabular-nums ${d.outcome === "executed" ? "text-emerald-400" : "text-zinc-500"}`}
             >
               {d.netProfit >= 0 ? "+" : ""}${d.netProfit.toFixed(3)}
             </span>
-            <span className="flex-1 text-zinc-500">{d.reason}</span>
+            <span className="flex-1 truncate text-zinc-500">{d.reason}</span>
           </div>
         ))}
       </div>
