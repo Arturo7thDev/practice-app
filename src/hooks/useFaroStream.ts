@@ -74,6 +74,7 @@ export interface PortfolioStats {
 export interface ScanCounters {
   opportunitiesScanned: number;
   profitableDetected: number;
+  skippedStaleData: number;
 }
 
 export interface FaroState {

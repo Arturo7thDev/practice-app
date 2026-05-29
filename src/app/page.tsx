@@ -10,6 +10,16 @@ import {
   type WalletBalance,
 } from "@/hooks/useFaroStream";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import {
+  CartesianGrid,
+  Line,
+  LineChart,
+  ReferenceLine,
+  ResponsiveContainer,
+  Tooltip,
+  XAxis,
+  YAxis,
+} from "recharts";
 
 const EXCHANGE_LABEL: Record<ExchangeName, string> = {
   binance: "Binance.US",
@@ -30,9 +40,14 @@ export default function Home() {
           opportunitiesScanned={state?.counters.opportunitiesScanned ?? 0}
           profitableDetected={state?.counters.profitableDetected ?? 0}
           executedTrades={state?.stats.totalTrades ?? 0}
+          skippedStale={state?.counters.skippedStaleData ?? 0}
         />
 
         <HeroStats stats={state?.stats} />
+
+        <Section title="P&L equity curve">
+          <EquityCurve trades={state?.executedTrades ?? []} />
+        </Section>
 
         <Section title="Live exchange tickers">
           <div className="grid grid-cols-1 gap-4 md:grid-cols-3">
@@ -77,11 +92,13 @@ function Header({
   opportunitiesScanned,
   profitableDetected,
   executedTrades,
+  skippedStale,
 }: {
   connected: boolean;
   opportunitiesScanned: number;
   profitableDetected: number;
   executedTrades: number;
+  skippedStale: number;
 }) {
   return (
     <header className="mb-8">
@@ -123,8 +140,102 @@ function Header({
           <span className="text-emerald-400">{executedTrades.toLocaleString()}</span>{" "}
           executed
         </span>
+        <span>
+          <span className="text-zinc-400">{skippedStale.toLocaleString()}</span>{" "}
+          skipped (stale data)
+        </span>
       </div>
     </header>
+  );
+}
+
+function EquityCurve({ trades }: { trades: ExecutedTrade[] }) {
+  // trades vienen del más nuevo al más viejo; los revertimos para acumular cronológicamente
+  const data = [...trades]
+    .reverse()
+    .reduce<{ time: string; pnl: number; ts: number }[]>((acc, t) => {
+      const prev = acc.length > 0 ? acc[acc.length - 1].pnl : 0;
+      acc.push({
+        time: new Date(t.timestamp).toLocaleTimeString("en-US", {
+          hour12: false,
+        }),
+        pnl: prev + t.netProfit,
+        ts: t.timestamp,
+      });
+      return acc;
+    }, []);
+
+  if (data.length === 0) {
+    return (
+      <div className="rounded-lg border border-zinc-800 bg-zinc-900 p-8 text-center text-sm text-zinc-500">
+        Equity curve will appear after the first executed trade.
+      </div>
+    );
+  }
+
+  const finalPnL = data[data.length - 1].pnl;
+  const isPositive = finalPnL >= 0;
+  const lineColor = isPositive ? "#34d399" : "#f87171"; // emerald-400 / red-400
+
+  return (
+    <div className="rounded-lg border border-zinc-800 bg-zinc-900 p-4">
+      <div className="mb-2 flex items-baseline justify-between">
+        <span className="text-xs uppercase tracking-wide text-zinc-500">
+          Cumulative net P&amp;L · {data.length} trades
+        </span>
+        <span
+          className={`font-mono tabular-nums text-lg font-semibold ${
+            isPositive ? "text-emerald-400" : "text-red-400"
+          }`}
+        >
+          {isPositive ? "+" : ""}${finalPnL.toFixed(2)}
+        </span>
+      </div>
+      <div className="h-64 w-full">
+        <ResponsiveContainer width="100%" height="100%">
+          <LineChart
+            data={data}
+            margin={{ top: 8, right: 8, bottom: 8, left: 8 }}
+          >
+            <CartesianGrid strokeDasharray="3 3" stroke="#27272a" />
+            <XAxis
+              dataKey="time"
+              tick={{ fill: "#71717a", fontSize: 11 }}
+              tickLine={{ stroke: "#3f3f46" }}
+              axisLine={{ stroke: "#3f3f46" }}
+              minTickGap={40}
+            />
+            <YAxis
+              tick={{ fill: "#71717a", fontSize: 11 }}
+              tickLine={{ stroke: "#3f3f46" }}
+              axisLine={{ stroke: "#3f3f46" }}
+              tickFormatter={(v: number) => `$${v.toFixed(2)}`}
+            />
+            <Tooltip
+              contentStyle={{
+                background: "#18181b",
+                border: "1px solid #3f3f46",
+                borderRadius: 8,
+                fontSize: 12,
+              }}
+              labelStyle={{ color: "#a1a1aa" }}
+              formatter={(value) => [
+                `$${Number(value).toFixed(2)}`,
+                "Cumulative P&L",
+              ]}
+            />
+            <ReferenceLine y={0} stroke="#52525b" strokeDasharray="4 4" />
+            <Line
+              type="monotone"
+              dataKey="pnl"
+              stroke={lineColor}
+              strokeWidth={2}
+              dot={false}
+            />
+          </LineChart>
+        </ResponsiveContainer>
+      </div>
+    </div>
   );
 }
 
