@@ -3,10 +3,13 @@
 import { useEffect, useState } from "react";
 
 export type ExchangeName = "binance" | "coinbase" | "kraken";
+export type Pair = "BTC/USDT" | "ETH/USDT";
+
+export const PAIRS: Pair[] = ["BTC/USDT", "ETH/USDT"];
 
 export interface Ticker {
   exchange: ExchangeName;
-  symbol: string;
+  pair: Pair;
   bid: number;
   ask: number;
   bidQty: number;
@@ -18,11 +21,12 @@ export interface Ticker {
 
 export interface Opportunity {
   timestamp: number;
+  pair: Pair;
   buyExchange: ExchangeName;
   sellExchange: ExchangeName;
   buyPrice: number;
   sellPrice: number;
-  maxVolumeBTC: number;
+  maxVolume: number;
   grossSpread: number;
   grossProfit: number;
   buyFee: number;
@@ -40,17 +44,19 @@ export interface WalletBalance {
   exchange: ExchangeName;
   usdt: number;
   btc: number;
+  eth: number;
 }
 
 export interface ExecutedTrade {
   id: string;
   timestamp: number;
+  pair: Pair;
   buyExchange: ExchangeName;
   sellExchange: ExchangeName;
   buyPrice: number;
   sellPrice: number;
-  requestedVolumeBTC: number;
-  executedVolumeBTC: number;
+  requestedVolume: number;
+  executedVolume: number;
   partial: boolean;
   buyFee: number;
   sellFee: number;
@@ -88,10 +94,12 @@ export interface ExchangeStats {
 export interface PortfolioStats {
   initialCapitalUSDT: number;
   initialBTC: number;
+  initialETH: number;
   totalArbitrageProfit: number;
   totalTrades: number;
   totalFeesPaid: number;
   currentBTCPrice: number;
+  currentETHPrice: number;
   currentPortfolioValueUSDT: number;
   hypotheticalRetailLoss: number;
   successRate: number;
@@ -99,11 +107,13 @@ export interface PortfolioStats {
   bestRoute: RoutePerformance | null;
   worstRoute: RoutePerformance | null;
   avgEvalLatencyMs: number;
+  profitByPair: Record<Pair, number>;
+  tradesByPair: Record<Pair, number>;
 }
 
 export interface FaroState {
-  tickers: Ticker[];
-  opportunities: Opportunity[];
+  tickersByPair: Record<Pair, Ticker[]>;
+  opportunitiesByPair: Record<Pair, Opportunity[]>;
   wallets: WalletBalance[];
   executedTrades: ExecutedTrade[];
   stats: PortfolioStats;

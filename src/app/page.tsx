@@ -1,11 +1,13 @@
 "use client";
 
 import {
+  PAIRS,
   useFaroStream,
   type ExchangeName,
   type ExchangeStats,
   type ExecutedTrade,
   type Opportunity,
+  type Pair,
   type PortfolioStats,
   type ScanCounters,
   type Ticker,
@@ -31,6 +33,16 @@ const EXCHANGE_LABEL: Record<ExchangeName, string> = {
 
 const EXCHANGES: ExchangeName[] = ["binance", "coinbase", "kraken"];
 
+const PAIR_LABEL: Record<Pair, string> = {
+  "BTC/USDT": "Bitcoin",
+  "ETH/USDT": "Ethereum",
+};
+
+const PAIR_ACCENT: Record<Pair, string> = {
+  "BTC/USDT": "text-amber-400",
+  "ETH/USDT": "text-violet-400",
+};
+
 export default function Home() {
   const { state, connected } = useFaroStream();
 
@@ -53,43 +65,38 @@ export default function Home() {
           <DecisionsPanel counters={state?.counters} />
         </Section>
 
-        <Section title="P&L equity curve">
+        <Section title="P&L equity curve (both pairs combined)">
           <EquityCurve trades={state?.executedTrades ?? []} />
         </Section>
 
-        <Section title="Live exchange tickers">
-          <div className="grid grid-cols-1 gap-4 md:grid-cols-3">
-            {EXCHANGES.map((ex) => (
-              <ExchangeCard
-                key={ex}
-                exchange={ex}
-                ticker={state?.tickers.find((t) => t.exchange === ex)}
-                exchangeStats={state?.exchangeStats.find(
-                  (s) => s.exchange === ex,
-                )}
-              />
-            ))}
-          </div>
-        </Section>
-
-        <Section title="Wallet balances (initial: $50K USDT + 0.5 BTC each)">
+        <Section title="Wallet balances per exchange">
           <div className="grid grid-cols-1 gap-4 md:grid-cols-3">
             {EXCHANGES.map((ex) => (
               <WalletCard
                 key={ex}
                 exchange={ex}
                 wallet={state?.wallets.find((w) => w.exchange === ex)}
+                btcPrice={state?.stats.currentBTCPrice ?? 0}
+                ethPrice={state?.stats.currentETHPrice ?? 0}
               />
             ))}
           </div>
         </Section>
 
-        <Section title="Executed trades · Faro (institutional) vs Retail (0.5%)">
-          <TradesTable trades={state?.executedTrades ?? []} />
-        </Section>
+        {PAIRS.map((pair) => (
+          <PairPanel
+            key={pair}
+            pair={pair}
+            tickers={state?.tickersByPair[pair] ?? []}
+            opportunities={state?.opportunitiesByPair[pair] ?? []}
+            exchangeStats={state?.exchangeStats ?? []}
+            profit={state?.stats.profitByPair[pair] ?? 0}
+            trades={state?.stats.tradesByPair[pair] ?? 0}
+          />
+        ))}
 
-        <Section title="Opportunities evaluated (real-time)">
-          <OpportunitiesTable opps={state?.opportunities ?? []} />
+        <Section title="Executed trades · all pairs · Faro vs Retail (0.5%)">
+          <TradesTable trades={state?.executedTrades ?? []} />
         </Section>
 
         <Footer />
@@ -114,13 +121,13 @@ function Header({
           <h1 className="text-3xl font-semibold tracking-tight">
             Faro <span className="font-normal text-zinc-500">·</span>{" "}
             <span className="font-normal text-zinc-400">
-              Honest BTC arbitrage
+              Honest crypto arbitrage
             </span>
           </h1>
           <p className="mt-1 text-sm text-zinc-500">
-            Real-time detection across 3 exchanges. Executes only what survives
-            fees + slippage. Modeled at market-maker tier (
-            <span className="font-mono">0.02–0.04%</span>).
+            Real-time detection across 3 exchanges · 2 pairs (BTC + ETH).
+            Executes only what survives fees + slippage. Modeled at market-maker
+            tier (<span className="font-mono">0.02–0.04%</span>).
           </p>
         </div>
         <div className="flex items-center gap-2 text-sm">
@@ -187,7 +194,7 @@ function HeroStats({
         }
         subtitle={
           stats
-            ? `${stats.totalTrades} trades · inst. fees`
+            ? `${stats.totalTrades} trades · BTC ${stats.tradesByPair["BTC/USDT"]} · ETH ${stats.tradesByPair["ETH/USDT"]}`
             : "Waiting for data…"
         }
       />
@@ -225,7 +232,7 @@ function HeroStats({
         valueClass="text-zinc-50"
         subtitle={
           stats
-            ? `Initial: $${stats.initialCapitalUSDT.toLocaleString()} + ${stats.initialBTC} BTC`
+            ? `$${stats.initialCapitalUSDT.toLocaleString()} + ${stats.initialBTC} BTC + ${stats.initialETH} ETH`
             : ""
         }
       />
@@ -276,6 +283,50 @@ function Section({
         {title}
       </h2>
       {children}
+    </section>
+  );
+}
+
+function PairPanel({
+  pair,
+  tickers,
+  opportunities,
+  exchangeStats,
+  profit,
+  trades,
+}: {
+  pair: Pair;
+  tickers: Ticker[];
+  opportunities: Opportunity[];
+  exchangeStats: ExchangeStats[];
+  profit: number;
+  trades: number;
+}) {
+  return (
+    <section className="mb-10">
+      <div className="mb-3 flex items-baseline justify-between">
+        <h2 className="text-sm font-medium uppercase tracking-wide text-zinc-500">
+          {PAIR_LABEL[pair]} · {pair}
+        </h2>
+        <div className="font-mono text-xs tabular-nums text-zinc-500">
+          <span className={profit >= 0 ? "text-emerald-400" : "text-red-400"}>
+            {profit >= 0 ? "+" : ""}${profit.toFixed(2)}
+          </span>{" "}
+          · {trades} trades
+        </div>
+      </div>
+      <div className="mb-4 grid grid-cols-1 gap-4 md:grid-cols-3">
+        {EXCHANGES.map((ex) => (
+          <ExchangeCard
+            key={ex}
+            exchange={ex}
+            pair={pair}
+            ticker={tickers.find((t) => t.exchange === ex)}
+            exchangeStats={exchangeStats.find((s) => s.exchange === ex)}
+          />
+        ))}
+      </div>
+      <OpportunitiesTable opps={opportunities} />
     </section>
   );
 }
@@ -435,10 +486,12 @@ function SkipBox({
 
 function ExchangeCard({
   exchange,
+  pair,
   ticker,
   exchangeStats,
 }: {
   exchange: ExchangeName;
+  pair: Pair;
   ticker: Ticker | undefined;
   exchangeStats: ExchangeStats | undefined;
 }) {
@@ -454,7 +507,13 @@ function ExchangeCard({
             <span className="rounded-full bg-amber-500/10 px-2 py-0.5 text-xs font-medium normal-case text-amber-400">
               stale · {ticker ? `${(ticker.ageMs / 1000).toFixed(0)}s ago` : ""}
             </span>
-          ) : null}
+          ) : (
+            <span
+              className={`text-[10px] normal-case ${PAIR_ACCENT[pair]}`}
+            >
+              {pair.split("/")[0]}
+            </span>
+          )}
         </CardTitle>
       </CardHeader>
       <CardContent className="space-y-1 font-mono tabular-nums">
@@ -474,10 +533,7 @@ function ExchangeCard({
             {ticker ? `$${(ticker.ask - ticker.bid).toFixed(2)}` : "—"}
           </span>
           {exchangeStats ? (
-            <span>
-              {exchangeStats.ticksPerSecond.toFixed(1)} t/s ·{" "}
-              {exchangeStats.ticksReceived.toLocaleString()} total
-            </span>
+            <span>{exchangeStats.ticksPerSecond.toFixed(1)} t/s</span>
           ) : null}
         </div>
       </CardContent>
@@ -498,7 +554,7 @@ function PriceRow({
     <div className="flex items-baseline justify-between">
       <span className="text-xs uppercase text-zinc-500">{label}</span>
       <span
-        className={`text-2xl font-semibold ${value ? colorOnFresh : "text-zinc-600"}`}
+        className={`text-xl font-semibold ${value ? colorOnFresh : "text-zinc-600"} lg:text-2xl`}
       >
         {value
           ? `$${value.toLocaleString("en-US", {
@@ -514,37 +570,75 @@ function PriceRow({
 function WalletCard({
   exchange,
   wallet,
+  btcPrice,
+  ethPrice,
 }: {
   exchange: ExchangeName;
   wallet: WalletBalance | undefined;
+  btcPrice: number;
+  ethPrice: number;
 }) {
+  const totalUsd = wallet
+    ? wallet.usdt + wallet.btc * btcPrice + wallet.eth * ethPrice
+    : 0;
   return (
     <Card className="border-zinc-800 bg-zinc-900 text-zinc-50">
       <CardHeader className="pb-2">
-        <CardTitle className="text-sm font-medium uppercase tracking-wide text-zinc-400">
-          {EXCHANGE_LABEL[exchange]} wallet
+        <CardTitle className="flex items-center justify-between text-sm font-medium uppercase tracking-wide text-zinc-400">
+          <span>{EXCHANGE_LABEL[exchange]}</span>
+          <span className="font-mono text-xs tabular-nums text-zinc-500 normal-case">
+            ≈ $
+            {totalUsd.toLocaleString("en-US", { maximumFractionDigits: 0 })}
+          </span>
         </CardTitle>
       </CardHeader>
-      <CardContent className="space-y-2 font-mono tabular-nums">
-        <div className="flex items-baseline justify-between">
-          <span className="text-xs uppercase text-zinc-500">USDT</span>
-          <span className="text-xl font-semibold text-zinc-100">
-            {wallet
-              ? wallet.usdt.toLocaleString("en-US", {
-                  maximumFractionDigits: 2,
-                  minimumFractionDigits: 2,
-                })
-              : "—"}
-          </span>
-        </div>
-        <div className="flex items-baseline justify-between">
-          <span className="text-xs uppercase text-zinc-500">BTC</span>
-          <span className="text-xl font-semibold text-amber-400">
-            {wallet ? wallet.btc.toFixed(6) : "—"}
-          </span>
-        </div>
+      <CardContent className="space-y-1 font-mono tabular-nums">
+        <BalanceRow
+          label="USDT"
+          value={wallet?.usdt}
+          color="text-zinc-100"
+          decimals={2}
+        />
+        <BalanceRow
+          label="BTC"
+          value={wallet?.btc}
+          color="text-amber-400"
+          decimals={6}
+        />
+        <BalanceRow
+          label="ETH"
+          value={wallet?.eth}
+          color="text-violet-400"
+          decimals={4}
+        />
       </CardContent>
     </Card>
+  );
+}
+
+function BalanceRow({
+  label,
+  value,
+  color,
+  decimals,
+}: {
+  label: string;
+  value: number | undefined;
+  color: string;
+  decimals: number;
+}) {
+  return (
+    <div className="flex items-baseline justify-between">
+      <span className="text-xs uppercase text-zinc-500">{label}</span>
+      <span className={`text-lg font-semibold ${color}`}>
+        {value !== undefined
+          ? value.toLocaleString("en-US", {
+              maximumFractionDigits: decimals,
+              minimumFractionDigits: decimals,
+            })
+          : "—"}
+      </span>
+    </div>
   );
 }
 
@@ -653,8 +747,9 @@ function TradesTable({ trades }: { trades: ExecutedTrade[] }) {
         <thead className="bg-zinc-900/80 text-xs uppercase text-zinc-500">
           <tr>
             <th className="px-4 py-3 text-left font-medium">Time</th>
+            <th className="px-4 py-3 text-left font-medium">Pair</th>
             <th className="px-4 py-3 text-left font-medium">Route</th>
-            <th className="px-4 py-3 text-right font-medium">Vol (BTC)</th>
+            <th className="px-4 py-3 text-right font-medium">Vol</th>
             <th className="px-4 py-3 text-right font-medium">Gross</th>
             <th className="px-4 py-3 text-right font-medium">
               Faro net (inst)
@@ -665,40 +760,44 @@ function TradesTable({ trades }: { trades: ExecutedTrade[] }) {
           </tr>
         </thead>
         <tbody className="font-mono tabular-nums">
-          {trades.slice(0, 15).map((t) => (
-            <tr key={t.id} className="border-t border-zinc-800">
-              <td className="px-4 py-2 text-zinc-500">
-                {new Date(t.timestamp).toLocaleTimeString("en-US", {
-                  hour12: false,
-                })}
-              </td>
-              <td className="px-4 py-2 text-zinc-300">
-                {t.buyExchange} → {t.sellExchange}
-                {t.partial ? (
-                  <span className="ml-2 rounded-full bg-amber-500/10 px-2 py-0.5 text-xs text-amber-400">
-                    partial
-                  </span>
-                ) : null}
-              </td>
-              <td className="px-4 py-2 text-right text-zinc-400">
-                {t.executedVolumeBTC.toFixed(6)}
-              </td>
-              <td className="px-4 py-2 text-right text-zinc-400">
-                ${t.grossProfit.toFixed(2)}
-              </td>
-              <td className="px-4 py-2 text-right font-semibold text-emerald-400">
-                +${t.netProfit.toFixed(2)}
-              </td>
-              <td
-                className={`px-4 py-2 text-right font-semibold ${
-                  t.retailNetProfit < 0 ? "text-red-400" : "text-zinc-400"
-                }`}
-              >
-                {t.retailNetProfit >= 0 ? "+" : ""}$
-                {t.retailNetProfit.toFixed(2)}
-              </td>
-            </tr>
-          ))}
+          {trades.slice(0, 20).map((t) => {
+            const asset = t.pair.split("/")[0];
+            return (
+              <tr key={t.id} className="border-t border-zinc-800">
+                <td className="px-4 py-2 text-zinc-500">
+                  {new Date(t.timestamp).toLocaleTimeString("en-US", {
+                    hour12: false,
+                  })}
+                </td>
+                <td className={`px-4 py-2 ${PAIR_ACCENT[t.pair]}`}>{asset}</td>
+                <td className="px-4 py-2 text-zinc-300">
+                  {t.buyExchange} → {t.sellExchange}
+                  {t.partial ? (
+                    <span className="ml-2 rounded-full bg-amber-500/10 px-2 py-0.5 text-xs text-amber-400">
+                      partial
+                    </span>
+                  ) : null}
+                </td>
+                <td className="px-4 py-2 text-right text-zinc-400">
+                  {t.executedVolume.toFixed(6)}
+                </td>
+                <td className="px-4 py-2 text-right text-zinc-400">
+                  ${t.grossProfit.toFixed(2)}
+                </td>
+                <td className="px-4 py-2 text-right font-semibold text-emerald-400">
+                  +${t.netProfit.toFixed(2)}
+                </td>
+                <td
+                  className={`px-4 py-2 text-right font-semibold ${
+                    t.retailNetProfit < 0 ? "text-red-400" : "text-zinc-400"
+                  }`}
+                >
+                  {t.retailNetProfit >= 0 ? "+" : ""}$
+                  {t.retailNetProfit.toFixed(2)}
+                </td>
+              </tr>
+            );
+          })}
         </tbody>
       </table>
     </div>
@@ -708,8 +807,8 @@ function TradesTable({ trades }: { trades: ExecutedTrade[] }) {
 function OpportunitiesTable({ opps }: { opps: Opportunity[] }) {
   if (opps.length === 0) {
     return (
-      <div className="rounded-lg border border-zinc-800 bg-zinc-900 p-8 text-center text-sm text-zinc-500">
-        Waiting for opportunities…
+      <div className="rounded-lg border border-zinc-800 bg-zinc-900 p-6 text-center text-xs text-zinc-500">
+        Waiting for opportunities on this pair…
       </div>
     );
   }
@@ -728,7 +827,7 @@ function OpportunitiesTable({ opps }: { opps: Opportunity[] }) {
           </tr>
         </thead>
         <tbody className="font-mono tabular-nums">
-          {opps.slice(0, 12).map((o, i) => (
+          {opps.slice(0, 8).map((o, i) => (
             <tr key={i} className="border-t border-zinc-800">
               <td className="px-4 py-2 text-zinc-500">
                 {new Date(o.timestamp).toLocaleTimeString("en-US", {
