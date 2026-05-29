@@ -31,12 +31,16 @@ export interface Opportunity {
   grossProfit: number;
   buyFee: number;
   sellFee: number;
-  totalFees: number;
+  tradingFees: number;
+  amortizedWithdrawal: number;
+  estimatedSlippage: number;
+  latencyCost: number;
+  totalCosts: number;
   netProfit: number;
   netSpread: number;
   profitable: boolean;
   suspicious: boolean;
-  retailFees: number;
+  retailTradingFees: number;
   retailNetProfit: number;
 }
 
@@ -58,9 +62,11 @@ export interface ExecutedTrade {
   requestedVolume: number;
   executedVolume: number;
   partial: boolean;
-  buyFee: number;
-  sellFee: number;
-  totalFees: number;
+  tradingFees: number;
+  amortizedWithdrawal: number;
+  estimatedSlippage: number;
+  latencyCost: number;
+  totalCosts: number;
   grossProfit: number;
   netProfit: number;
   retailNetProfit: number;
@@ -97,7 +103,11 @@ export interface PortfolioStats {
   initialETH: number;
   totalArbitrageProfit: number;
   totalTrades: number;
-  totalFeesPaid: number;
+  totalTradingFees: number;
+  totalAmortizedWithdrawal: number;
+  totalEstimatedSlippage: number;
+  totalLatencyCost: number;
+  totalCosts: number;
   currentBTCPrice: number;
   currentETHPrice: number;
   currentPortfolioValueUSDT: number;

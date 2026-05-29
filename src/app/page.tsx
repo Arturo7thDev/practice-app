@@ -65,6 +65,10 @@ export default function Home() {
           <DecisionsPanel counters={state?.counters} />
         </Section>
 
+        <Section title="Full cost breakdown · trading + withdrawal + slippage + latency">
+          <CostBreakdown stats={state?.stats} />
+        </Section>
+
         <Section title="P&L equity curve (both pairs combined)">
           <EquityCurve trades={state?.executedTrades ?? []} />
         </Section>
@@ -460,6 +464,74 @@ function DecisionsPanel({ counters }: { counters: ScanCounters | undefined }) {
   );
 }
 
+function CostBreakdown({ stats }: { stats: PortfolioStats | undefined }) {
+  if (!stats || stats.totalTrades === 0) {
+    return (
+      <div className="rounded-lg border border-zinc-800 bg-zinc-900 p-6 text-sm text-zinc-500">
+        Cost breakdown appears after the first executed trade.
+      </div>
+    );
+  }
+  return (
+    <div className="grid grid-cols-2 gap-3 lg:grid-cols-5">
+      <CostBox
+        label="Trading fees"
+        value={stats.totalTradingFees}
+        color="text-red-400"
+        sub="taker × 2 sides"
+      />
+      <CostBox
+        label="Withdrawal (amortized)"
+        value={stats.totalAmortizedWithdrawal}
+        color="text-amber-400"
+        sub="÷ 100 trades/rebalance"
+      />
+      <CostBox
+        label="Estimated slippage"
+        value={stats.totalEstimatedSlippage}
+        color="text-amber-400"
+        sub="0.002% × trade value"
+      />
+      <CostBox
+        label="Latency cost"
+        value={stats.totalLatencyCost}
+        color="text-amber-400"
+        sub="0.001% × trade value"
+      />
+      <CostBox
+        label="Total all-in cost"
+        value={stats.totalCosts}
+        color="text-zinc-100"
+        sub="what survives = NET"
+      />
+    </div>
+  );
+}
+
+function CostBox({
+  label,
+  value,
+  color,
+  sub,
+}: {
+  label: string;
+  value: number;
+  color: string;
+  sub: string;
+}) {
+  return (
+    <div className="rounded-lg border border-zinc-800 bg-zinc-900 p-3">
+      <div className="text-xs uppercase tracking-wide text-zinc-500">
+        {label}
+      </div>
+      <div className={`mt-1 font-mono text-lg font-semibold tabular-nums ${color}`}>
+        ${value.toFixed(2)}
+      </div>
+      <div className="mt-0.5 text-[10px] text-zinc-600">{sub}</div>
+    </div>
+  );
+}
+
 function SkipBox({
   label,
   value,
@@ -753,6 +825,7 @@ function TradesTable({ trades }: { trades: ExecutedTrade[] }) {
             <th className="px-4 py-3 text-left font-medium">Route</th>
             <th className="px-4 py-3 text-right font-medium">Vol</th>
             <th className="px-4 py-3 text-right font-medium">Gross</th>
+            <th className="px-4 py-3 text-right font-medium">All-in cost</th>
             <th className="px-4 py-3 text-right font-medium">
               Faro net (inst)
             </th>
@@ -764,6 +837,7 @@ function TradesTable({ trades }: { trades: ExecutedTrade[] }) {
         <tbody className="font-mono tabular-nums">
           {trades.slice(0, 20).map((t) => {
             const asset = t.pair.split("/")[0];
+            const costTooltip = `trading $${t.tradingFees.toFixed(3)} · withdrawal $${t.amortizedWithdrawal.toFixed(3)} · slippage $${t.estimatedSlippage.toFixed(3)} · latency $${t.latencyCost.toFixed(3)}`;
             return (
               <tr key={t.id} className="border-t border-zinc-800">
                 <td className="px-4 py-2 text-zinc-500">
@@ -785,6 +859,12 @@ function TradesTable({ trades }: { trades: ExecutedTrade[] }) {
                 </td>
                 <td className="px-4 py-2 text-right text-zinc-400">
                   ${t.grossProfit.toFixed(2)}
+                </td>
+                <td
+                  className="cursor-help px-4 py-2 text-right text-zinc-500 underline decoration-dotted underline-offset-2"
+                  title={costTooltip}
+                >
+                  ${t.totalCosts.toFixed(2)}
                 </td>
                 <td className="px-4 py-2 text-right font-semibold text-emerald-400">
                   +${t.netProfit.toFixed(2)}
