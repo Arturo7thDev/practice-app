@@ -118,8 +118,10 @@ function Header({
     <header className="mb-8">
       <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
         <div>
-          <h1 className="text-3xl font-semibold tracking-tight">
-            Faro <span className="font-normal text-zinc-500">·</span>{" "}
+          <h1 className="flex items-center gap-3 text-3xl font-semibold tracking-tight">
+            <FaroLogo className="h-7 w-7 text-amber-400" />
+            <span>Faro</span>
+            <span className="font-normal text-zinc-500">·</span>{" "}
             <span className="font-normal text-zinc-400">
               Honest crypto arbitrage
             </span>
@@ -876,11 +878,38 @@ function OpportunitiesTable({ opps }: { opps: Opportunity[] }) {
 
 function Footer() {
   return (
-    <footer className="mt-12 border-t border-zinc-800 pt-6 text-xs text-zinc-500">
-      Faro models market-maker tier (taker 0.02–0.04%, accessible to operators
-      with $4B+ monthly volume — Binance VIP 9, Coinbase top tier). At retail
-      fees (0.5%), every single profitable opportunity above would become a
-      loss. That&apos;s the gap most arbitrage promises ignore.
+    <footer className="mt-12 space-y-2 border-t border-zinc-800 pt-6 text-xs text-zinc-500">
+      <p>
+        Faro models market-maker tier (taker{" "}
+        <span className="font-mono">0.02–0.04%</span>, accessible to operators
+        with $4B+ monthly volume — Binance VIP 9, Coinbase top tier). At retail
+        fees (<span className="font-mono">0.5%</span>), every profitable
+        opportunity above would become a loss.
+      </p>
+      <p>
+        Withdrawal fees (~0.0001 BTC, ~$1 USDT per exchange) are amortized
+        across rebalancing cycles — negligible per trade at this volume tier.
+        Real arbitrage operators batch transfers nightly to keep this cost
+        below 0.001% of daily volume.
+      </p>
     </footer>
+  );
+}
+
+function FaroLogo({ className }: { className?: string }) {
+  return (
+    <svg viewBox="0 0 32 32" className={className} xmlns="http://www.w3.org/2000/svg">
+      <path
+        d="M16 12L4 8M16 12L28 8"
+        stroke="currentColor"
+        strokeWidth="1.5"
+        strokeLinecap="round"
+        opacity="0.6"
+      />
+      <circle cx="16" cy="12" r="2.5" fill="currentColor" />
+      <rect x="11" y="14" width="10" height="1.5" fill="#34d399" />
+      <path d="M12 16h8l1 10H11z" fill="#34d399" />
+      <rect x="9" y="26" width="14" height="1.5" fill="#34d399" />
+    </svg>
   );
 }
