@@ -1,13 +1,23 @@
 "use client";
 
-import { useFaroStream, type Opportunity, type Ticker } from "@/hooks/useFaroStream";
+import {
+  useFaroStream,
+  type ExchangeName,
+  type ExecutedTrade,
+  type Opportunity,
+  type PortfolioStats,
+  type Ticker,
+  type WalletBalance,
+} from "@/hooks/useFaroStream";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 
-const EXCHANGE_LABEL: Record<Ticker["exchange"], string> = {
+const EXCHANGE_LABEL: Record<ExchangeName, string> = {
   binance: "Binance.US",
   coinbase: "Coinbase",
   kraken: "Kraken",
 };
+
+const EXCHANGES: ExchangeName[] = ["binance", "coinbase", "kraken"];
 
 export default function Home() {
   const { state, connected } = useFaroStream();
@@ -15,46 +25,175 @@ export default function Home() {
   return (
     <main className="min-h-screen bg-zinc-950 text-zinc-50">
       <div className="mx-auto max-w-6xl px-6 py-10">
-        <header className="mb-8 flex items-center justify-between">
-          <div>
-            <h1 className="text-3xl font-semibold tracking-tight">
-              Faro <span className="text-zinc-500 font-normal">·</span>{" "}
-              <span className="text-zinc-400 font-normal">
-                Honest BTC arbitrage
-              </span>
-            </h1>
-            <p className="mt-1 text-sm text-zinc-500">
-              Real-time arbitrage detection across 3 exchanges. Shows only what
-              survives the net calculation.
-            </p>
-          </div>
-          <div className="flex items-center gap-2 text-sm">
-            <span
-              className={`inline-block h-2 w-2 rounded-full ${
-                connected ? "bg-emerald-500 animate-pulse" : "bg-zinc-600"
-              }`}
-            />
-            <span className="text-zinc-400">
-              {connected ? "live" : "connecting…"}
-            </span>
-          </div>
-        </header>
+        <Header connected={connected} />
 
-        <section className="mb-10 grid grid-cols-1 gap-4 md:grid-cols-3">
-          {(["binance", "coinbase", "kraken"] as const).map((ex) => {
-            const t = state?.tickers.find((x) => x.exchange === ex);
-            return <ExchangeCard key={ex} exchange={ex} ticker={t} />;
-          })}
-        </section>
+        <HeroStats stats={state?.stats} />
 
-        <section>
-          <h2 className="mb-3 text-sm font-medium uppercase tracking-wide text-zinc-500">
-            Recent opportunities evaluated
-          </h2>
+        <Section title="Live exchange tickers">
+          <div className="grid grid-cols-1 gap-4 md:grid-cols-3">
+            {EXCHANGES.map((ex) => (
+              <ExchangeCard
+                key={ex}
+                exchange={ex}
+                ticker={state?.tickers.find((t) => t.exchange === ex)}
+              />
+            ))}
+          </div>
+        </Section>
+
+        <Section title="Wallet balances">
+          <div className="grid grid-cols-1 gap-4 md:grid-cols-3">
+            {EXCHANGES.map((ex) => (
+              <WalletCard
+                key={ex}
+                exchange={ex}
+                wallet={state?.wallets.find((w) => w.exchange === ex)}
+              />
+            ))}
+          </div>
+        </Section>
+
+        <Section title="Executed trades">
+          <TradesTable trades={state?.executedTrades ?? []} />
+        </Section>
+
+        <Section title="Opportunities evaluated (real-time)">
           <OpportunitiesTable opps={state?.opportunities ?? []} />
-        </section>
+        </Section>
       </div>
     </main>
+  );
+}
+
+function Header({ connected }: { connected: boolean }) {
+  return (
+    <header className="mb-8 flex items-center justify-between">
+      <div>
+        <h1 className="text-3xl font-semibold tracking-tight">
+          Faro <span className="font-normal text-zinc-500">·</span>{" "}
+          <span className="font-normal text-zinc-400">
+            Honest BTC arbitrage
+          </span>
+        </h1>
+        <p className="mt-1 text-sm text-zinc-500">
+          Real-time detection across 3 exchanges. Executes only what survives
+          fees + slippage.
+        </p>
+      </div>
+      <div className="flex items-center gap-2 text-sm">
+        <span
+          className={`inline-block h-2 w-2 rounded-full ${
+            connected ? "animate-pulse bg-emerald-500" : "bg-zinc-600"
+          }`}
+        />
+        <span className="text-zinc-400">
+          {connected ? "live" : "connecting…"}
+        </span>
+      </div>
+    </header>
+  );
+}
+
+function HeroStats({ stats }: { stats: PortfolioStats | undefined }) {
+  const profit = stats?.totalArbitrageProfit ?? 0;
+  const isPositive = profit > 0;
+
+  return (
+    <section className="mb-10 grid grid-cols-1 gap-4 md:grid-cols-3">
+      <StatCard
+        label="Total arbitrage profit"
+        value={
+          stats
+            ? `${profit >= 0 ? "+" : ""}$${profit.toFixed(2)}`
+            : "—"
+        }
+        valueClass={
+          stats
+            ? isPositive
+              ? "text-emerald-400"
+              : profit < 0
+                ? "text-red-400"
+                : "text-zinc-300"
+            : "text-zinc-600"
+        }
+        subtitle={
+          stats
+            ? `From ${stats.totalTrades} executed trades`
+            : "Waiting for data…"
+        }
+      />
+      <StatCard
+        label="Portfolio value"
+        value={
+          stats
+            ? `$${stats.currentPortfolioValueUSDT.toLocaleString("en-US", {
+                maximumFractionDigits: 0,
+              })}`
+            : "—"
+        }
+        valueClass="text-zinc-50"
+        subtitle={
+          stats
+            ? `Initial: $${stats.initialCapitalUSDT.toLocaleString()} + ${stats.initialBTC} BTC`
+            : ""
+        }
+      />
+      <StatCard
+        label="Total fees paid"
+        value={
+          stats ? `$${stats.totalFeesPaid.toFixed(2)}` : "—"
+        }
+        valueClass="text-zinc-300"
+        subtitle="Trading fees across all venues"
+      />
+    </section>
+  );
+}
+
+function StatCard({
+  label,
+  value,
+  valueClass,
+  subtitle,
+}: {
+  label: string;
+  value: string;
+  valueClass: string;
+  subtitle?: string;
+}) {
+  return (
+    <Card className="border-zinc-800 bg-zinc-900 text-zinc-50">
+      <CardContent className="pt-6">
+        <div className="text-xs font-medium uppercase tracking-wide text-zinc-500">
+          {label}
+        </div>
+        <div
+          className={`mt-2 font-mono text-3xl font-semibold tabular-nums ${valueClass}`}
+        >
+          {value}
+        </div>
+        {subtitle ? (
+          <div className="mt-1 text-xs text-zinc-500">{subtitle}</div>
+        ) : null}
+      </CardContent>
+    </Card>
+  );
+}
+
+function Section({
+  title,
+  children,
+}: {
+  title: string;
+  children: React.ReactNode;
+}) {
+  return (
+    <section className="mb-10">
+      <h2 className="mb-3 text-sm font-medium uppercase tracking-wide text-zinc-500">
+        {title}
+      </h2>
+      {children}
+    </section>
   );
 }
 
@@ -62,7 +201,7 @@ function ExchangeCard({
   exchange,
   ticker,
 }: {
-  exchange: Ticker["exchange"];
+  exchange: ExchangeName;
   ticker: Ticker | undefined;
 }) {
   return (
@@ -73,20 +212,26 @@ function ExchangeCard({
         </CardTitle>
       </CardHeader>
       <CardContent className="space-y-1 font-mono tabular-nums">
-        <Row label="bid" value={ticker?.bid} colorOnFresh="text-emerald-400" />
-        <Row label="ask" value={ticker?.ask} colorOnFresh="text-red-400" />
+        <PriceRow
+          label="bid"
+          value={ticker?.bid}
+          colorOnFresh="text-emerald-400"
+        />
+        <PriceRow
+          label="ask"
+          value={ticker?.ask}
+          colorOnFresh="text-red-400"
+        />
         <div className="pt-2 text-xs text-zinc-500">
           spread{" "}
-          {ticker
-            ? `$${(ticker.ask - ticker.bid).toFixed(2)}`
-            : "—"}
+          {ticker ? `$${(ticker.ask - ticker.bid).toFixed(2)}` : "—"}
         </div>
       </CardContent>
     </Card>
   );
 }
 
-function Row({
+function PriceRow({
   label,
   value,
   colorOnFresh,
@@ -98,9 +243,112 @@ function Row({
   return (
     <div className="flex items-baseline justify-between">
       <span className="text-xs uppercase text-zinc-500">{label}</span>
-      <span className={`text-2xl font-semibold ${value ? colorOnFresh : "text-zinc-600"}`}>
-        {value ? `$${value.toLocaleString("en-US", { maximumFractionDigits: 2, minimumFractionDigits: 2 })}` : "—"}
+      <span
+        className={`text-2xl font-semibold ${value ? colorOnFresh : "text-zinc-600"}`}
+      >
+        {value
+          ? `$${value.toLocaleString("en-US", {
+              maximumFractionDigits: 2,
+              minimumFractionDigits: 2,
+            })}`
+          : "—"}
       </span>
+    </div>
+  );
+}
+
+function WalletCard({
+  exchange,
+  wallet,
+}: {
+  exchange: ExchangeName;
+  wallet: WalletBalance | undefined;
+}) {
+  return (
+    <Card className="border-zinc-800 bg-zinc-900 text-zinc-50">
+      <CardHeader className="pb-2">
+        <CardTitle className="text-sm font-medium uppercase tracking-wide text-zinc-400">
+          {EXCHANGE_LABEL[exchange]} wallet
+        </CardTitle>
+      </CardHeader>
+      <CardContent className="space-y-2 font-mono tabular-nums">
+        <div className="flex items-baseline justify-between">
+          <span className="text-xs uppercase text-zinc-500">USDT</span>
+          <span className="text-xl font-semibold text-zinc-100">
+            {wallet
+              ? wallet.usdt.toLocaleString("en-US", {
+                  maximumFractionDigits: 2,
+                  minimumFractionDigits: 2,
+                })
+              : "—"}
+          </span>
+        </div>
+        <div className="flex items-baseline justify-between">
+          <span className="text-xs uppercase text-zinc-500">BTC</span>
+          <span className="text-xl font-semibold text-amber-400">
+            {wallet ? wallet.btc.toFixed(6) : "—"}
+          </span>
+        </div>
+      </CardContent>
+    </Card>
+  );
+}
+
+function TradesTable({ trades }: { trades: ExecutedTrade[] }) {
+  if (trades.length === 0) {
+    return (
+      <div className="rounded-lg border border-zinc-800 bg-zinc-900 p-8 text-center text-sm text-zinc-500">
+        No trades executed yet. The bot only executes opportunities profitable
+        AFTER fees — most candidates are mirages.
+      </div>
+    );
+  }
+
+  return (
+    <div className="overflow-hidden rounded-lg border border-zinc-800 bg-zinc-900">
+      <table className="w-full text-sm">
+        <thead className="bg-zinc-900/80 text-xs uppercase text-zinc-500">
+          <tr>
+            <th className="px-4 py-3 text-left font-medium">Time</th>
+            <th className="px-4 py-3 text-left font-medium">Route</th>
+            <th className="px-4 py-3 text-right font-medium">Vol (BTC)</th>
+            <th className="px-4 py-3 text-right font-medium">Gross</th>
+            <th className="px-4 py-3 text-right font-medium">Fees</th>
+            <th className="px-4 py-3 text-right font-medium">Net P&amp;L</th>
+          </tr>
+        </thead>
+        <tbody className="font-mono tabular-nums">
+          {trades.slice(0, 15).map((t) => (
+            <tr key={t.id} className="border-t border-zinc-800">
+              <td className="px-4 py-2 text-zinc-500">
+                {new Date(t.timestamp).toLocaleTimeString("en-US", {
+                  hour12: false,
+                })}
+              </td>
+              <td className="px-4 py-2 text-zinc-300">
+                {t.buyExchange} → {t.sellExchange}
+                {t.partial ? (
+                  <span className="ml-2 rounded-full bg-amber-500/10 px-2 py-0.5 text-xs text-amber-400">
+                    partial
+                  </span>
+                ) : null}
+              </td>
+              <td className="px-4 py-2 text-right text-zinc-400">
+                {t.executedVolumeBTC.toFixed(6)}
+              </td>
+              <td className="px-4 py-2 text-right text-zinc-400">
+                ${t.grossProfit.toFixed(2)}
+              </td>
+              <td className="px-4 py-2 text-right text-zinc-500">
+                ${t.totalFees.toFixed(2)}
+              </td>
+              <td className="px-4 py-2 text-right font-semibold text-emerald-400">
+                +${t.netProfit.toFixed(2)}
+              </td>
+            </tr>
+          ))}
+        </tbody>
+      </table>
     </div>
   );
 }
@@ -121,7 +369,6 @@ function OpportunitiesTable({ opps }: { opps: Opportunity[] }) {
           <tr>
             <th className="px-4 py-3 text-left font-medium">Time</th>
             <th className="px-4 py-3 text-left font-medium">Route</th>
-            <th className="px-4 py-3 text-right font-medium">Vol (BTC)</th>
             <th className="px-4 py-3 text-right font-medium">Gross</th>
             <th className="px-4 py-3 text-right font-medium">Fees</th>
             <th className="px-4 py-3 text-right font-medium">Net</th>
@@ -138,9 +385,6 @@ function OpportunitiesTable({ opps }: { opps: Opportunity[] }) {
               </td>
               <td className="px-4 py-2 text-zinc-300">
                 {o.buyExchange} → {o.sellExchange}
-              </td>
-              <td className="px-4 py-2 text-right text-zinc-400">
-                {o.maxVolumeBTC.toFixed(6)}
               </td>
               <td className="px-4 py-2 text-right text-zinc-400">
                 ${o.grossProfit.toFixed(2)}

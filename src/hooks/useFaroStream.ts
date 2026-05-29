@@ -2,8 +2,10 @@
 
 import { useEffect, useState } from "react";
 
+export type ExchangeName = "binance" | "coinbase" | "kraken";
+
 export interface Ticker {
-  exchange: "binance" | "coinbase" | "kraken";
+  exchange: ExchangeName;
   symbol: string;
   bid: number;
   ask: number;
@@ -14,8 +16,8 @@ export interface Ticker {
 
 export interface Opportunity {
   timestamp: number;
-  buyExchange: Ticker["exchange"];
-  sellExchange: Ticker["exchange"];
+  buyExchange: ExchangeName;
+  sellExchange: ExchangeName;
   buyPrice: number;
   sellPrice: number;
   maxVolumeBTC: number;
@@ -29,9 +31,45 @@ export interface Opportunity {
   profitable: boolean;
 }
 
+export interface WalletBalance {
+  exchange: ExchangeName;
+  usdt: number;
+  btc: number;
+}
+
+export interface ExecutedTrade {
+  id: string;
+  timestamp: number;
+  buyExchange: ExchangeName;
+  sellExchange: ExchangeName;
+  buyPrice: number;
+  sellPrice: number;
+  requestedVolumeBTC: number;
+  executedVolumeBTC: number;
+  partial: boolean;
+  buyFee: number;
+  sellFee: number;
+  totalFees: number;
+  grossProfit: number;
+  netProfit: number;
+}
+
+export interface PortfolioStats {
+  initialCapitalUSDT: number;
+  initialBTC: number;
+  totalArbitrageProfit: number;
+  totalTrades: number;
+  totalFeesPaid: number;
+  currentBTCPrice: number;
+  currentPortfolioValueUSDT: number;
+}
+
 export interface FaroState {
   tickers: Ticker[];
   opportunities: Opportunity[];
+  wallets: WalletBalance[];
+  executedTrades: ExecutedTrade[];
+  stats: PortfolioStats;
   timestamp: number;
 }
 
