@@ -1,18 +1,20 @@
 "use client";
 
 import {
-  PAIRS,
+  LINEAR_PAIRS,
   useFaroStream,
   type Decision,
   type ExchangeName,
   type ExchangeStats,
   type ExecutedTrade,
+  type ExecutedTriangularTrade,
   type Opportunity,
   type Pair,
   type PortfolioStats,
   type RiskMetrics,
   type ScanCounters,
   type Ticker,
+  type TriangularOpportunity,
   type WalletBalance,
 } from "@/hooks/useFaroStream";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -38,11 +40,13 @@ const EXCHANGES: ExchangeName[] = ["binance", "coinbase", "kraken"];
 const PAIR_LABEL: Record<Pair, string> = {
   "BTC/USDT": "Bitcoin",
   "ETH/USDT": "Ethereum",
+  "ETH/BTC": "ETH/BTC bridge",
 };
 
 const PAIR_ACCENT: Record<Pair, string> = {
   "BTC/USDT": "text-amber-400",
   "ETH/USDT": "text-violet-400",
+  "ETH/BTC": "text-sky-400",
 };
 
 const DECISION_COLOR: Record<Decision["outcome"], string> = {
@@ -115,7 +119,7 @@ export default function Home() {
           </div>
         </Section>
 
-        {PAIRS.map((pair) => (
+        {LINEAR_PAIRS.map((pair) => (
           <PairPanel
             key={pair}
             pair={pair}
@@ -129,6 +133,13 @@ export default function Home() {
 
         <Section title="Executed trades · all pairs · Faro vs Retail (0.5%)">
           <TradesTable trades={state?.executedTrades ?? []} />
+        </Section>
+
+        <Section title="Triangular arbitrage · within a single exchange (BTC ↔ ETH ↔ USDT)">
+          <TriangularPanel
+            opps={state?.triangularOpportunities ?? []}
+            trades={state?.triangularTrades ?? []}
+          />
         </Section>
 
         <Footer />
@@ -1152,6 +1163,165 @@ function OpportunitiesTable({ opps }: { opps: Opportunity[] }) {
           ))}
         </tbody>
       </table>
+    </div>
+  );
+}
+
+function TriangularPanel({
+  opps,
+  trades,
+}: {
+  opps: TriangularOpportunity[];
+  trades: ExecutedTriangularTrade[];
+}) {
+  const scanned = opps.length;
+  const profitable = opps.filter((o) => o.profitable).length;
+  const triProfit = trades.reduce((s, t) => s + t.netProfit, 0);
+
+  return (
+    <div className="space-y-4">
+      <div className="grid grid-cols-2 gap-3 lg:grid-cols-4">
+        <MetricBox
+          label="Triangular cycles tracked"
+          value={scanned.toString()}
+          subtitle="last 12 evaluated"
+          valueClass="text-zinc-100"
+        />
+        <MetricBox
+          label="Profitable detected"
+          value={profitable.toString()}
+          subtitle={`${scanned > 0 ? ((profitable / scanned) * 100).toFixed(0) : 0}% hit rate`}
+          valueClass={profitable > 0 ? "text-emerald-400" : "text-zinc-400"}
+        />
+        <MetricBox
+          label="Triangular trades executed"
+          value={trades.length.toString()}
+          subtitle="within single exchange"
+          valueClass={trades.length > 0 ? "text-emerald-400" : "text-zinc-400"}
+        />
+        <MetricBox
+          label="Triangular P&L"
+          value={`${triProfit >= 0 ? "+" : ""}$${triProfit.toFixed(2)}`}
+          subtitle={`on $1,000 notional/cycle`}
+          valueClass={
+            triProfit > 0
+              ? "text-emerald-400"
+              : triProfit < 0
+                ? "text-red-400"
+                : "text-zinc-400"
+          }
+        />
+      </div>
+
+      {opps.length === 0 ? (
+        <div className="rounded-lg border border-zinc-800 bg-zinc-900 p-6 text-center text-sm text-zinc-500">
+          Waiting for full triangle (BTC/USDT + ETH/USDT + ETH/BTC) on at
+          least one exchange…
+        </div>
+      ) : (
+        <div className="overflow-x-auto rounded-lg border border-zinc-800 bg-zinc-900">
+          <table className="w-full text-sm">
+            <thead className="bg-zinc-900/80 text-xs uppercase text-zinc-500">
+              <tr>
+                <th className="px-4 py-3 text-left font-medium">Time</th>
+                <th className="px-4 py-3 text-left font-medium">Exchange</th>
+                <th className="px-4 py-3 text-left font-medium">Cycle</th>
+                <th className="px-4 py-3 text-right font-medium">Start</th>
+                <th className="px-4 py-3 text-right font-medium">Final</th>
+                <th className="px-4 py-3 text-right font-medium">Net</th>
+                <th className="px-4 py-3 text-right font-medium">%</th>
+                <th className="px-4 py-3 text-right font-medium">Verdict</th>
+              </tr>
+            </thead>
+            <tbody className="font-mono tabular-nums">
+              {opps.slice(0, 12).map((o, i) => (
+                <tr key={i} className="border-t border-zinc-800">
+                  <td className="px-4 py-2 text-zinc-500">
+                    {new Date(o.timestamp).toLocaleTimeString("en-US", {
+                      hour12: false,
+                    })}
+                  </td>
+                  <td className="px-4 py-2 text-zinc-300">
+                    {EXCHANGE_LABEL[o.exchange]}
+                  </td>
+                  <td className="px-4 py-2 text-zinc-300">{o.direction}</td>
+                  <td className="px-4 py-2 text-right text-zinc-500">
+                    ${o.startUSDT.toFixed(2)}
+                  </td>
+                  <td className="px-4 py-2 text-right text-zinc-400">
+                    ${o.finalUSDT.toFixed(2)}
+                  </td>
+                  <td
+                    className={`px-4 py-2 text-right font-semibold ${
+                      o.profitable ? "text-emerald-400" : "text-red-400"
+                    }`}
+                  >
+                    {o.netProfit >= 0 ? "+" : ""}${o.netProfit.toFixed(4)}
+                  </td>
+                  <td
+                    className={`px-4 py-2 text-right ${
+                      o.profitable ? "text-emerald-400" : "text-red-400"
+                    }`}
+                  >
+                    {(o.netPercent * 100).toFixed(4)}%
+                  </td>
+                  <td className="px-4 py-2 text-right">
+                    {o.profitable ? (
+                      <span className="rounded-full bg-emerald-500/10 px-2 py-1 text-xs font-medium text-emerald-400">
+                        RENTABLE
+                      </span>
+                    ) : (
+                      <span className="rounded-full bg-zinc-800 px-2 py-1 text-xs font-medium text-zinc-500">
+                        DESCARTADA
+                      </span>
+                    )}
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+      )}
+
+      {trades.length > 0 ? (
+        <div className="overflow-x-auto rounded-lg border border-emerald-500/20 bg-emerald-500/5">
+          <div className="px-4 py-2 text-xs font-medium uppercase tracking-wide text-emerald-400">
+            Executed triangular trades
+          </div>
+          <table className="w-full text-sm">
+            <thead className="text-xs uppercase text-zinc-500">
+              <tr>
+                <th className="px-4 py-2 text-left font-medium">Time</th>
+                <th className="px-4 py-2 text-left font-medium">Exchange</th>
+                <th className="px-4 py-2 text-left font-medium">Cycle</th>
+                <th className="px-4 py-2 text-right font-medium">Net P&amp;L</th>
+                <th className="px-4 py-2 text-right font-medium">Fees</th>
+              </tr>
+            </thead>
+            <tbody className="font-mono tabular-nums">
+              {trades.slice(0, 10).map((t) => (
+                <tr key={t.id} className="border-t border-zinc-800">
+                  <td className="px-4 py-2 text-zinc-500">
+                    {new Date(t.timestamp).toLocaleTimeString("en-US", {
+                      hour12: false,
+                    })}
+                  </td>
+                  <td className="px-4 py-2 text-zinc-300">
+                    {EXCHANGE_LABEL[t.exchange]}
+                  </td>
+                  <td className="px-4 py-2 text-zinc-300">{t.direction}</td>
+                  <td className="px-4 py-2 text-right font-semibold text-emerald-400">
+                    +${t.netProfit.toFixed(4)}
+                  </td>
+                  <td className="px-4 py-2 text-right text-zinc-500">
+                    ${t.totalFeesUSD.toFixed(4)}
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+      ) : null}
     </div>
   );
 }

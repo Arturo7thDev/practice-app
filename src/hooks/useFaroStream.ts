@@ -3,9 +3,10 @@
 import { useEffect, useState } from "react";
 
 export type ExchangeName = "binance" | "coinbase" | "kraken";
-export type Pair = "BTC/USDT" | "ETH/USDT";
+export type Pair = "BTC/USDT" | "ETH/USDT" | "ETH/BTC";
 
-export const PAIRS: Pair[] = ["BTC/USDT", "ETH/USDT"];
+// Solo pares directos (USD-anchor) son los que mostramos en linear arb sections
+export const LINEAR_PAIRS: Pair[] = ["BTC/USDT", "ETH/USDT"];
 
 export interface Ticker {
   exchange: ExchangeName;
@@ -153,6 +154,41 @@ export interface Decision {
   reason: string;
 }
 
+export interface TriangularLeg {
+  pair: Pair;
+  side: "buy" | "sell";
+  price: number;
+  amountIn: number;
+  amountInAsset: "USDT" | "BTC" | "ETH";
+  amountOut: number;
+  amountOutAsset: "USDT" | "BTC" | "ETH";
+  feeUSDValue: number;
+}
+
+export interface TriangularOpportunity {
+  timestamp: number;
+  exchange: ExchangeName;
+  direction: string;
+  startUSDT: number;
+  finalUSDT: number;
+  netProfit: number;
+  netPercent: number;
+  legs: TriangularLeg[];
+  profitable: boolean;
+}
+
+export interface ExecutedTriangularTrade {
+  id: string;
+  timestamp: number;
+  exchange: ExchangeName;
+  direction: string;
+  startUSDT: number;
+  finalUSDT: number;
+  netProfit: number;
+  netPercent: number;
+  totalFeesUSD: number;
+}
+
 export interface FaroState {
   tickersByPair: Record<Pair, Ticker[]>;
   opportunitiesByPair: Record<Pair, Opportunity[]>;
@@ -162,6 +198,8 @@ export interface FaroState {
   counters: ScanCounters;
   exchangeStats: ExchangeStats[];
   decisions: Decision[];
+  triangularOpportunities: TriangularOpportunity[];
+  triangularTrades: ExecutedTriangularTrade[];
   timestamp: number;
 }
 
