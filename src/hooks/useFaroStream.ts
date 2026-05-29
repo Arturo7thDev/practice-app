@@ -95,6 +95,8 @@ export interface ExchangeStats {
   ticksPerSecond: number;
   avgIntervalMs: number;
   uptimeSeconds: number;
+  networkLatencyMs: number;
+  networkLatencyAt: number;
 }
 
 export interface PortfolioStats {

@@ -642,13 +642,31 @@ function ExchangeCard({
           value={ticker?.ask}
           colorOnFresh={isStale ? "text-zinc-500" : "text-red-400"}
         />
-        <div className="flex justify-between pt-2 text-xs text-zinc-500">
+        <div className="flex flex-wrap justify-between gap-2 pt-2 text-xs text-zinc-500">
           <span>
             spread{" "}
             {ticker ? `$${(ticker.ask - ticker.bid).toFixed(2)}` : "—"}
           </span>
           {exchangeStats ? (
-            <span>{exchangeStats.ticksPerSecond.toFixed(1)} t/s</span>
+            <span className="flex items-center gap-2">
+              <span title="WebSocket message rate">
+                <span className="text-zinc-300">
+                  {exchangeStats.ticksPerSecond.toFixed(1)}
+                </span>{" "}
+                msg/s
+              </span>
+              {exchangeStats.networkLatencyMs > 0 ? (
+                <span
+                  title="Measured network RTT via REST ping every 30s"
+                  className="border-l border-zinc-700 pl-2"
+                >
+                  <span className="text-zinc-300">
+                    {exchangeStats.networkLatencyMs.toFixed(0)}
+                  </span>{" "}
+                  ms RTT
+                </span>
+              ) : null}
+            </span>
           ) : null}
         </div>
       </CardContent>
