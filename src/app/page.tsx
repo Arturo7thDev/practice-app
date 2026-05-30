@@ -814,17 +814,23 @@ function StatCard({
   subtitle?: string;
 }) {
   return (
-    <div className="glass rounded-2xl p-5 transition-colors hover:bg-white/[0.04]">
-      <div className="text-[10px] font-semibold uppercase tracking-[0.2em] text-zinc-500">
-        {label}
-      </div>
+    <div
+      className="instrument-frame glass p-5 transition-colors hover:bg-[var(--tide)]/70"
+      style={{ borderRadius: "2px" }}
+    >
+      <div className="caption-nav">{label}</div>
       <div
-        className={`mt-3 font-mono text-3xl font-semibold tabular-numbers leading-none ${valueClass}`}
+        className={`font-display mt-4 text-3xl font-medium tabular-numbers leading-none ${valueClass}`}
       >
         {value}
       </div>
       {subtitle ? (
-        <div className="mt-2 text-xs text-zinc-500">{subtitle}</div>
+        <div
+          className="mt-3 text-xs"
+          style={{ color: "var(--type-faint)", fontFamily: "var(--font-mono)" }}
+        >
+          {subtitle}
+        </div>
       ) : null}
     </div>
   );
@@ -847,21 +853,39 @@ function Section({
     <section className="mb-14 sm:mb-16">
       <div className="mb-6 flex items-start gap-4">
         {Icon ? (
-          <div className="glass mt-1 flex h-10 w-10 shrink-0 items-center justify-center rounded-2xl">
-            <Icon className="h-5 w-5 text-emerald-400" />
+          <div
+            className="instrument-frame mt-1 flex h-10 w-10 shrink-0 items-center justify-center border"
+            style={{
+              borderColor: "var(--foam)",
+              background: "var(--abyss)",
+              color: "var(--beacon)",
+            }}
+          >
+            <Icon className="h-4 w-4" />
           </div>
         ) : null}
         <div className="min-w-0 flex-1">
           {eyebrow ? (
-            <div className="mb-1 text-[10px] font-semibold uppercase tracking-[0.22em] text-emerald-400/80">
+            <div
+              className="caption-nav mb-2"
+              style={{ color: "var(--beacon-warm)" }}
+            >
               {eyebrow}
             </div>
           ) : null}
-          <h2 className="text-2xl font-semibold tracking-tight text-white sm:text-3xl">
+          <h2
+            className="font-display text-2xl font-medium tracking-tight sm:text-3xl"
+            style={{ color: "var(--type-ink)" }}
+          >
             {title}
           </h2>
           {subtitle ? (
-            <p className="mt-1 text-sm text-zinc-500">{subtitle}</p>
+            <p
+              className="mt-1 text-sm leading-relaxed"
+              style={{ color: "var(--type-mute)" }}
+            >
+              {subtitle}
+            </p>
           ) : null}
         </div>
       </div>
@@ -1145,16 +1169,22 @@ function MetricBox({
   valueClass: string;
 }) {
   return (
-    <div className="glass rounded-2xl p-5">
-      <div className="text-[10px] font-semibold uppercase tracking-[0.2em] text-zinc-500">
-        {label}
-      </div>
+    <div
+      className="instrument-frame glass p-5"
+      style={{ borderRadius: "2px" }}
+    >
+      <div className="caption-nav">{label}</div>
       <div
-        className={`mt-2.5 font-mono text-2xl font-semibold tabular-numbers leading-none ${valueClass}`}
+        className={`font-display mt-3.5 text-2xl font-medium tabular-numbers leading-none ${valueClass}`}
       >
         {value}
       </div>
-      <div className="mt-2 text-xs text-zinc-500">{subtitle}</div>
+      <div
+        className="mt-2.5 text-xs"
+        style={{ color: "var(--type-faint)", fontFamily: "var(--font-mono)" }}
+      >
+        {subtitle}
+      </div>
     </div>
   );
 }
@@ -1867,16 +1897,22 @@ function CostBox({
   sub: string;
 }) {
   return (
-    <div className="glass rounded-2xl p-4">
-      <div className="text-[10px] font-semibold uppercase tracking-[0.2em] text-zinc-500">
-        {label}
-      </div>
+    <div
+      className="instrument-frame glass p-4"
+      style={{ borderRadius: "2px" }}
+    >
+      <div className="caption-nav">{label}</div>
       <div
-        className={`mt-2 font-mono text-xl font-semibold tabular-numbers leading-none ${color}`}
+        className={`font-display mt-3 text-xl font-medium tabular-numbers leading-none ${color}`}
       >
         ${value.toFixed(2)}
       </div>
-      <div className="mt-1.5 text-[10px] text-zinc-600">{sub}</div>
+      <div
+        className="mt-2 text-[10px]"
+        style={{ color: "var(--type-faint)", fontFamily: "var(--font-mono)" }}
+      >
+        {sub}
+      </div>
     </div>
   );
 }
@@ -1893,16 +1929,22 @@ function SkipBox({
   subtitle: string;
 }) {
   return (
-    <div className="glass rounded-2xl p-4">
-      <div className="text-[10px] font-semibold uppercase tracking-[0.2em] text-zinc-500">
-        {label}
-      </div>
+    <div
+      className="instrument-frame glass p-4"
+      style={{ borderRadius: "2px" }}
+    >
+      <div className="caption-nav">{label}</div>
       <div
-        className={`mt-2 font-mono text-xl font-semibold tabular-numbers leading-none ${color}`}
+        className={`font-display mt-3 text-xl font-medium tabular-numbers leading-none ${color}`}
       >
         {value.toLocaleString()}
       </div>
-      <div className="mt-1.5 text-[10px] text-zinc-600">{subtitle}</div>
+      <div
+        className="mt-2 text-[10px]"
+        style={{ color: "var(--type-faint)", fontFamily: "var(--font-mono)" }}
+      >
+        {subtitle}
+      </div>
     </div>
   );
 }
