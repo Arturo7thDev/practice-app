@@ -834,8 +834,9 @@ function DifferentiatorBanner() {
           <span className="text-[var(--type-ink)]">fees de trading</span> +{" "}
           <span className="text-[var(--type-ink)]">retiro amortizado</span> +{" "}
           <span className="text-[var(--type-ink)]">slippage estimado</span> +{" "}
-          <span className="text-[var(--type-ink)]">latencia de red</span> en cada
-          oportunidad. La mayoría de los bots solo cuentan fees de trading — por
+          <span className="text-[var(--type-ink)]">latencia de red</span>{" "}
+          en cada oportunidad. La mayoría de los bots solo cuentan fees de
+          trading — por
           eso sus &ldquo;ganancias&rdquo; se desvanecen en la realidad.
         </p>
       </div>
