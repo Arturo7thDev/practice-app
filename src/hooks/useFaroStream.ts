@@ -102,6 +102,16 @@ export interface TobiCalibration {
   hitRateLow: number;
 }
 
+export interface KellyMetrics {
+  fullKelly: number;
+  fractionalKelly: number;
+  winProb: number;
+  edgeRatio: number;
+  samples: number;
+  isReliable: boolean;
+  currentPositionSizeUSDT: number;
+}
+
 export interface RoutePerformance {
   route: string;
   count: number;
@@ -172,6 +182,7 @@ export interface PortfolioStats {
   risk: RiskMetrics;
   fintech: FintechMetrics;
   tobi: TobiCalibration;
+  kelly: KellyMetrics;
 }
 
 export interface Decision {

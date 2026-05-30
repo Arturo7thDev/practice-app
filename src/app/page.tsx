@@ -9,6 +9,7 @@ import {
   type ExecutedTrade,
   type ExecutedTriangularTrade,
   type FintechMetrics,
+  type KellyMetrics,
   type NaiveState,
   type NaiveTrade,
   type Opportunity,
@@ -152,6 +153,15 @@ export default function Home() {
             tobi={state?.stats.tobi}
             skippedLowSurvival={state?.counters.skippedLowSurvival ?? 0}
           />
+        </Section>
+
+        <Section
+          icon={Sparkles}
+          eyebrow="Sizing científico"
+          title="Kelly Criterion · position sizing"
+          subtitle="El bot ajusta el tamaño de cada trade en función de la edge observada. Fractional Kelly (25%) con cap absoluto del 20% del bankroll"
+        >
+          <KellyPanel kelly={state?.stats.kelly} />
         </Section>
 
         <Section
@@ -1131,6 +1141,109 @@ function TobiBucketCard({
         </span>{" "}
         sobrevivieron &gt; 1s
       </div>
+    </div>
+  );
+}
+
+function KellyPanel({ kelly }: { kelly: KellyMetrics | undefined }) {
+  if (!kelly) {
+    return (
+      <div className="glass rounded-2xl p-6 text-sm text-zinc-500">
+        Inicializando Kelly Criterion…
+      </div>
+    );
+  }
+
+  const fmtPct = (n: number) => `${(n * 100).toFixed(1)}%`;
+  const fmtRatio = (n: number) =>
+    Number.isFinite(n) ? n.toFixed(2) : "∞";
+  const fmtUSD = (n: number) =>
+    `$${n.toLocaleString("en-US", {
+      minimumFractionDigits: 0,
+      maximumFractionDigits: 0,
+    })}`;
+
+  return (
+    <div className="space-y-4">
+      {/* Cómo funciona */}
+      <div className="glass rounded-2xl p-5">
+        <div className="mb-3 flex items-center gap-2 text-[10px] font-semibold uppercase tracking-[0.2em] text-emerald-400">
+          <Sparkles className="h-3.5 w-3.5" />
+          Cómo funciona
+        </div>
+        <p className="text-sm leading-relaxed text-zinc-300">
+          Fórmula clásica de Kelly: dado un win rate{" "}
+          <span className="font-mono text-zinc-100">p</span> y un ratio de
+          ganancia/pérdida <span className="font-mono text-zinc-100">b</span>,
+          la fracción óptima del bankroll para arriesgar es:
+        </p>
+        <div className="mt-3 rounded-xl bg-black/40 p-4 font-mono text-xs text-zinc-300">
+          f* = (p · b − q) / b{"   "}donde q = 1 − p
+        </div>
+        <p className="mt-3 text-sm leading-relaxed text-zinc-400">
+          Kelly completo tiene varianza brutal en la práctica. Aplicamos{" "}
+          <strong>Fractional Kelly (25%)</strong> y cappeamos al{" "}
+          <strong>20% del bankroll</strong> por trade. Hasta los primeros 10
+          trades válidos usamos una fracción default conservadora (10%) para
+          no apostar sobre estadísticas inestables.
+        </p>
+      </div>
+
+      {/* Métricas en vivo */}
+      <div className="grid grid-cols-2 gap-3 lg:grid-cols-4">
+        <MetricBox
+          label="Position size actual"
+          value={fmtUSD(kelly.currentPositionSizeUSDT)}
+          subtitle={
+            kelly.isReliable
+              ? `${fmtPct(kelly.fractionalKelly)} del portfolio`
+              : "cold start (10% default)"
+          }
+          valueClass={
+            kelly.currentPositionSizeUSDT > 0
+              ? "text-emerald-400"
+              : "text-zinc-400"
+          }
+        />
+        <MetricBox
+          label="Fractional Kelly"
+          value={fmtPct(kelly.fractionalKelly)}
+          subtitle={`f* = ${kelly.fullKelly.toFixed(3)} (raw)`}
+          valueClass={
+            kelly.fractionalKelly === 0
+              ? "text-red-400"
+              : kelly.fractionalKelly >= 0.15
+                ? "text-emerald-400"
+                : "text-zinc-300"
+          }
+        />
+        <MetricBox
+          label="Win probability"
+          value={kelly.samples > 0 ? fmtPct(kelly.winProb) : "—"}
+          subtitle={`${kelly.samples} trades válidos`}
+          valueClass={
+            kelly.winProb > 0.5 ? "text-emerald-400" : "text-zinc-300"
+          }
+        />
+        <MetricBox
+          label="Edge ratio (b)"
+          value={kelly.samples > 0 ? fmtRatio(kelly.edgeRatio) : "—"}
+          subtitle="avg_win / |avg_loss|"
+          valueClass={
+            Number.isFinite(kelly.edgeRatio) && kelly.edgeRatio > 1
+              ? "text-emerald-400"
+              : "text-zinc-300"
+          }
+        />
+      </div>
+
+      {!kelly.isReliable && (
+        <div className="rounded-xl bg-amber-500/5 px-4 py-3 text-xs text-amber-300/90">
+          Modelo aún no calibrado — usando fracción default (10%) hasta
+          acumular ≥ 10 trades. Esto evita decisiones agresivas sobre
+          estadísticas inestables.
+        </div>
+      )}
     </div>
   );
 }
