@@ -115,6 +115,19 @@ export interface RiskMetrics {
   exposureByExchange: ExchangeExposure[];
 }
 
+export interface FintechMetrics {
+  sharpeRatio: number;
+  sortinoRatio: number;
+  profitFactor: number;
+  winRate: number;
+  evalLatencyP50: number;
+  evalLatencyP95: number;
+  evalLatencyP99: number;
+  avgOpportunityLifetimeMs: number;
+  p95OpportunityLifetimeMs: number;
+  totalOpportunityDeaths: number;
+}
+
 export interface PortfolioStats {
   initialCapitalUSDT: number;
   initialBTC: number;
@@ -138,6 +151,7 @@ export interface PortfolioStats {
   profitByPair: Record<Pair, number>;
   tradesByPair: Record<Pair, number>;
   risk: RiskMetrics;
+  fintech: FintechMetrics;
 }
 
 export interface Decision {

@@ -8,6 +8,7 @@ import {
   type ExchangeStats,
   type ExecutedTrade,
   type ExecutedTriangularTrade,
+  type FintechMetrics,
   type NaiveState,
   type NaiveTrade,
   type Opportunity,
@@ -35,7 +36,9 @@ import {
   Skull,
   Sparkles,
   Swords,
+  Timer,
   TrendingUp,
+  Zap,
 } from "lucide-react";
 import {
   CartesianGrid,
@@ -125,6 +128,15 @@ export default function Home() {
           subtitle="Métricas agregadas de performance en todas las ejecuciones"
         >
           <StrategyPanel stats={state?.stats} />
+        </Section>
+
+        <Section
+          icon={Zap}
+          eyebrow="HFT-grade"
+          title="Métricas fintech profesionales"
+          subtitle="Sharpe, Sortino, Profit Factor, latencias de procesamiento y alpha decay — el idioma estándar de la industria"
+        >
+          <FintechPanel fintech={state?.stats.fintech} />
         </Section>
 
         <Section
@@ -715,6 +727,178 @@ function StrategyPanel({ stats }: { stats: PortfolioStats | undefined }) {
         subtitle="promedio por ticker procesado"
         valueClass="text-zinc-100"
       />
+    </div>
+  );
+}
+
+function FintechPanel({ fintech }: { fintech: FintechMetrics | undefined }) {
+  if (!fintech) {
+    return (
+      <div className="glass rounded-2xl p-6 text-sm text-zinc-500">
+        Computando métricas fintech…
+      </div>
+    );
+  }
+
+  // Sharpe: > 1 bueno, > 2 muy bueno, > 3 excelente
+  const sharpeColor =
+    fintech.sharpeRatio > 2
+      ? "text-emerald-400"
+      : fintech.sharpeRatio > 1
+        ? "text-emerald-400"
+        : fintech.sharpeRatio > 0
+          ? "text-amber-400"
+          : "text-zinc-400";
+
+  // Profit factor: > 1 ganador, > 2 muy bueno, > 3 excelente
+  const pfColor =
+    !Number.isFinite(fintech.profitFactor) || fintech.profitFactor > 2
+      ? "text-emerald-400"
+      : fintech.profitFactor > 1
+        ? "text-emerald-400"
+        : fintech.profitFactor > 0
+          ? "text-amber-400"
+          : "text-zinc-400";
+
+  // Latencia: < 1ms excelente, < 5ms bueno, > 10ms alarma
+  const p99Color =
+    fintech.evalLatencyP99 < 1
+      ? "text-emerald-400"
+      : fintech.evalLatencyP99 < 5
+        ? "text-emerald-400"
+        : fintech.evalLatencyP99 < 10
+          ? "text-amber-400"
+          : "text-red-400";
+
+  const fmtRatio = (n: number) =>
+    Number.isFinite(n) ? n.toFixed(2) : "∞";
+
+  return (
+    <div className="space-y-4">
+      {/* Risk-adjusted returns */}
+      <div className="grid grid-cols-2 gap-3 lg:grid-cols-4">
+        <MetricBox
+          label="Sharpe ratio"
+          value={fmtRatio(fintech.sharpeRatio)}
+          subtitle="risk-adjusted return per trade"
+          valueClass={sharpeColor}
+        />
+        <MetricBox
+          label="Sortino ratio"
+          value={fmtRatio(fintech.sortinoRatio)}
+          subtitle="penaliza solo downside"
+          valueClass={
+            Number.isFinite(fintech.sortinoRatio) &&
+            fintech.sortinoRatio > 0
+              ? "text-emerald-400"
+              : "text-zinc-400"
+          }
+        />
+        <MetricBox
+          label="Profit factor"
+          value={fmtRatio(fintech.profitFactor)}
+          subtitle="gross profit / gross loss"
+          valueClass={pfColor}
+        />
+        <MetricBox
+          label="Win rate"
+          value={`${(fintech.winRate * 100).toFixed(0)}%`}
+          subtitle="% trades con net > 0"
+          valueClass={
+            fintech.winRate > 0.7
+              ? "text-emerald-400"
+              : fintech.winRate > 0.5
+                ? "text-amber-400"
+                : "text-zinc-400"
+          }
+        />
+      </div>
+
+      {/* Latency percentiles */}
+      <div className="glass rounded-2xl p-5">
+        <div className="mb-3 flex items-center gap-2 text-[10px] font-semibold uppercase tracking-[0.2em] text-emerald-400">
+          <Timer className="h-3.5 w-3.5" />
+          Eval latency · percentiles
+        </div>
+        <div className="grid grid-cols-3 gap-4">
+          <div>
+            <div className="text-[10px] uppercase tracking-wide text-zinc-500">
+              p50
+            </div>
+            <div className="mt-1 font-mono text-xl font-semibold tabular-numbers text-zinc-100">
+              {fintech.evalLatencyP50.toFixed(3)} ms
+            </div>
+          </div>
+          <div>
+            <div className="text-[10px] uppercase tracking-wide text-zinc-500">
+              p95
+            </div>
+            <div
+              className={`mt-1 font-mono text-xl font-semibold tabular-numbers ${
+                fintech.evalLatencyP95 < 5 ? "text-zinc-100" : "text-amber-400"
+              }`}
+            >
+              {fintech.evalLatencyP95.toFixed(3)} ms
+            </div>
+          </div>
+          <div>
+            <div className="text-[10px] uppercase tracking-wide text-zinc-500">
+              p99
+            </div>
+            <div
+              className={`mt-1 font-mono text-xl font-semibold tabular-numbers ${p99Color}`}
+            >
+              {fintech.evalLatencyP99.toFixed(3)} ms
+            </div>
+          </div>
+        </div>
+        <div className="mt-2 text-[10px] text-zinc-600">
+          Tiempo desde llegada del tick hasta decisión completa · ring buffer de
+          últimas 1000 muestras
+        </div>
+      </div>
+
+      {/* Alpha decay */}
+      <div className="glass rounded-2xl p-5">
+        <div className="mb-3 flex items-center gap-2 text-[10px] font-semibold uppercase tracking-[0.2em] text-emerald-400">
+          <Activity className="h-3.5 w-3.5" />
+          Alpha decay · vida útil de oportunidades
+        </div>
+        <div className="grid grid-cols-3 gap-4">
+          <div>
+            <div className="text-[10px] uppercase tracking-wide text-zinc-500">
+              avg lifetime
+            </div>
+            <div className="mt-1 font-mono text-xl font-semibold tabular-numbers text-zinc-100">
+              {fintech.avgOpportunityLifetimeMs > 1000
+                ? `${(fintech.avgOpportunityLifetimeMs / 1000).toFixed(2)}s`
+                : `${fintech.avgOpportunityLifetimeMs.toFixed(0)}ms`}
+            </div>
+          </div>
+          <div>
+            <div className="text-[10px] uppercase tracking-wide text-zinc-500">
+              p95 lifetime
+            </div>
+            <div className="mt-1 font-mono text-xl font-semibold tabular-numbers text-zinc-100">
+              {fintech.p95OpportunityLifetimeMs > 1000
+                ? `${(fintech.p95OpportunityLifetimeMs / 1000).toFixed(2)}s`
+                : `${fintech.p95OpportunityLifetimeMs.toFixed(0)}ms`}
+            </div>
+          </div>
+          <div>
+            <div className="text-[10px] uppercase tracking-wide text-zinc-500">
+              samples
+            </div>
+            <div className="mt-1 font-mono text-xl font-semibold tabular-numbers text-zinc-400">
+              {fintech.totalOpportunityDeaths.toLocaleString()}
+            </div>
+          </div>
+        </div>
+        <div className="mt-2 text-[10px] text-zinc-600">
+          Tiempo entre la primera aparición rentable de una ruta y su cierre ·
+          señal de eficiencia del mercado
+        </div>
+      </div>
     </div>
   );
 }
