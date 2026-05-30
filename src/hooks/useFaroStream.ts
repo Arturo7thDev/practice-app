@@ -112,6 +112,19 @@ export interface KellyMetrics {
   currentPositionSizeUSDT: number;
 }
 
+export interface SlippagePosterior {
+  mean: number;
+  variance: number;
+  samples: number;
+}
+
+export interface BayesianSlippageMetrics {
+  binance: SlippagePosterior;
+  coinbase: SlippagePosterior;
+  kraken: SlippagePosterior;
+  staticEstimateBps: number;
+}
+
 export interface RoutePerformance {
   route: string;
   count: number;
@@ -183,6 +196,7 @@ export interface PortfolioStats {
   fintech: FintechMetrics;
   tobi: TobiCalibration;
   kelly: KellyMetrics;
+  bayesian: BayesianSlippageMetrics;
 }
 
 export interface Decision {

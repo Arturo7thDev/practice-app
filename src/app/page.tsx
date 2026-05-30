@@ -8,6 +8,7 @@ import {
   type ExchangeStats,
   type ExecutedTrade,
   type ExecutedTriangularTrade,
+  type BayesianSlippageMetrics,
   type FintechMetrics,
   type KellyMetrics,
   type NaiveState,
@@ -38,6 +39,7 @@ import {
   Skull,
   Sparkles,
   Swords,
+  Telescope,
   Timer,
   TrendingUp,
   Zap,
@@ -162,6 +164,15 @@ export default function Home() {
           subtitle="El bot ajusta el tamaño de cada trade en función de la edge observada. Fractional Kelly (25%) con cap absoluto del 20% del bankroll"
         >
           <KellyPanel kelly={state?.stats.kelly} />
+        </Section>
+
+        <Section
+          icon={Telescope}
+          eyebrow="Online learning"
+          title="Bayesian slippage learning"
+          subtitle="Posterior por exchange actualizado en vivo con Normal-Normal conjugate update — converge al slippage real a medida que se observan trades"
+        >
+          <BayesianPanel bayesian={state?.stats.bayesian} />
         </Section>
 
         <Section
@@ -1244,6 +1255,166 @@ function KellyPanel({ kelly }: { kelly: KellyMetrics | undefined }) {
           estadísticas inestables.
         </div>
       )}
+    </div>
+  );
+}
+
+function BayesianPanel({
+  bayesian,
+}: {
+  bayesian: BayesianSlippageMetrics | undefined;
+}) {
+  if (!bayesian) {
+    return (
+      <div className="glass rounded-2xl p-6 text-sm text-zinc-500">
+        Inicializando estimador Bayesiano…
+      </div>
+    );
+  }
+
+  const totalSamples =
+    bayesian.binance.samples +
+    bayesian.coinbase.samples +
+    bayesian.kraken.samples;
+
+  return (
+    <div className="space-y-4">
+      {/* Cómo funciona */}
+      <div className="glass rounded-2xl p-5">
+        <div className="mb-3 flex items-center gap-2 text-[10px] font-semibold uppercase tracking-[0.2em] text-emerald-400">
+          <Telescope className="h-3.5 w-3.5" />
+          Cómo funciona
+        </div>
+        <p className="text-sm leading-relaxed text-zinc-300">
+          El detector usa hoy un estimate global de slippage de{" "}
+          <span className="font-mono text-zinc-100">
+            {bayesian.staticEstimateBps} bps
+          </span>{" "}
+          aplicado por igual a los tres exchanges. Eso es ingenuo: cada exchange
+          tiene su propia liquidez. Mantenemos un{" "}
+          <strong>posterior Bayesiano por exchange</strong> que se actualiza
+          después de cada trade ejecutado:
+        </p>
+        <div className="mt-3 rounded-xl bg-black/40 p-4 font-mono text-xs text-zinc-300">
+          μ<sub>post</sub> = (σ²<sub>obs</sub>·μ<sub>prior</sub> + σ²
+          <sub>prior</sub>·x<sub>obs</sub>) / (σ²<sub>obs</sub> + σ²
+          <sub>prior</sub>)
+        </div>
+        <p className="mt-3 text-sm leading-relaxed text-zinc-400">
+          A medida que el estimador acumula observaciones, el posterior
+          converge al slippage <strong>real</strong> por exchange. En
+          producción, este posterior alimentaría el detector reemplazando el
+          estimate estático — el modelo de costos pasaría de ingenuo a
+          exchange-aware.
+        </p>
+        <p className="mt-2 text-xs text-zinc-500">
+          Observaciones totales acumuladas:{" "}
+          <span className="font-mono tabular-numbers text-zinc-300">
+            {totalSamples.toLocaleString()}
+          </span>
+        </p>
+      </div>
+
+      {/* Posteriors por exchange */}
+      <div className="grid grid-cols-1 gap-3 md:grid-cols-3">
+        <BayesianExchangeCard
+          exchange="binance"
+          label="Binance.US"
+          posterior={bayesian.binance}
+          staticBps={bayesian.staticEstimateBps}
+        />
+        <BayesianExchangeCard
+          exchange="coinbase"
+          label="Coinbase"
+          posterior={bayesian.coinbase}
+          staticBps={bayesian.staticEstimateBps}
+        />
+        <BayesianExchangeCard
+          exchange="kraken"
+          label="Kraken"
+          posterior={bayesian.kraken}
+          staticBps={bayesian.staticEstimateBps}
+        />
+      </div>
+
+      <p className="text-[11px] text-zinc-500">
+        <strong className="text-zinc-400">Lectura:</strong> el bot necesita
+        acumular trades reales para converger. Si el modelo está aprendiendo,
+        verás los posteriors moverse desde 5 bps (prior) hacia valores
+        diferenciados por exchange. La columna "Δ vs estático" cuantifica
+        cuánto mejoraría el detector si lo conectáramos.
+      </p>
+    </div>
+  );
+}
+
+function BayesianExchangeCard({
+  label,
+  posterior,
+  staticBps,
+}: {
+  exchange: "binance" | "coinbase" | "kraken";
+  label: string;
+  posterior: { mean: number; variance: number; samples: number };
+  staticBps: number;
+}) {
+  const stddev = Math.sqrt(posterior.variance);
+  const delta = posterior.mean - staticBps;
+  const deltaSign = delta >= 0 ? "+" : "";
+  const isConverged = posterior.samples >= 10;
+
+  return (
+    <div className="glass rounded-2xl p-5">
+      <div className="flex items-center justify-between">
+        <div className="text-[10px] font-semibold uppercase tracking-[0.18em] text-zinc-400">
+          {label}
+        </div>
+        {isConverged ? (
+          <span className="rounded-full bg-emerald-500/10 px-2 py-0.5 text-[10px] font-medium text-emerald-400">
+            converging
+          </span>
+        ) : (
+          <span className="rounded-full bg-zinc-700/40 px-2 py-0.5 text-[10px] font-medium text-zinc-500">
+            cold start
+          </span>
+        )}
+      </div>
+      <div className="mt-3 font-mono text-2xl font-semibold tabular-numbers leading-none text-zinc-100">
+        {posterior.mean.toFixed(2)}
+        <span className="ml-1 text-sm text-zinc-500">bps</span>
+      </div>
+      <div className="mt-2 text-[10px] text-zinc-500">
+        posterior mean · σ ={" "}
+        <span className="font-mono tabular-numbers text-zinc-400">
+          {stddev.toFixed(2)}
+        </span>
+      </div>
+      <div className="mt-3 flex items-center justify-between border-t border-white/[0.05] pt-3">
+        <span className="text-[10px] uppercase tracking-wide text-zinc-500">
+          samples
+        </span>
+        <span className="font-mono tabular-numbers text-xs text-zinc-300">
+          {posterior.samples.toLocaleString()}
+        </span>
+      </div>
+      <div className="mt-1 flex items-center justify-between">
+        <span className="text-[10px] uppercase tracking-wide text-zinc-500">
+          Δ vs estático
+        </span>
+        <span
+          className={`font-mono tabular-numbers text-xs ${
+            Math.abs(delta) < 0.5
+              ? "text-zinc-400"
+              : delta > 0
+                ? "text-amber-400"
+                : "text-emerald-400"
+          }`}
+        >
+          {posterior.samples === 0
+            ? "—"
+            : `${deltaSign}${delta.toFixed(2)} bps`}
+        </span>
+      </div>
     </div>
   );
 }
