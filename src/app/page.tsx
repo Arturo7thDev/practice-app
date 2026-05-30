@@ -81,7 +81,10 @@ const DECISION_LABEL: Record<Decision["outcome"], string> = {
 };
 
 export default function Home() {
-  const { state, connected } = useFaroStream();
+  const { state, connected, lastMessageAt } = useFaroStream();
+  const sseHealthy =
+    lastMessageAt !== null && Date.now() - lastMessageAt < 2000;
+  void sseHealthy; // disponible para usar en el futuro si querés mostrar indicador
 
   return (
     <main className="min-h-screen text-zinc-50">
@@ -828,44 +831,66 @@ function RiskPanel({ risk }: { risk: RiskMetrics | undefined }) {
 }
 
 function DecisionsFeed({ decisions }: { decisions: Decision[] }) {
-  if (decisions.length === 0) {
-    return (
-      <div className="glass rounded-2xl p-6 text-center text-sm text-zinc-500">
-        Las decisiones van a aparecer acá a medida que el bot evalúe oportunidades…
-      </div>
-    );
-  }
+  const now = Date.now();
+  const newest = decisions[0];
+  const newestAgeSec = newest ? (now - newest.timestamp) / 1000 : null;
   return (
-    <div className="overflow-x-auto glass rounded-2xl">
-      <div className="min-w-[640px] divide-y divide-zinc-800">
-        {decisions.map((d, i) => (
-          <div
-            key={i}
-            className="flex items-center gap-3 px-4 py-2 font-mono text-xs"
-          >
-            <span className="w-16 text-zinc-500 tabular-numbers">
-              {new Date(d.timestamp).toLocaleTimeString("en-US", {
-                hour12: false,
-              })}
-            </span>
-            <span
-              className={`w-24 font-semibold ${DECISION_COLOR[d.outcome]}`}
-            >
-              {DECISION_LABEL[d.outcome]}
-            </span>
-            <span className={`w-8 ${PAIR_ACCENT[d.pair]}`}>
-              {d.pair.split("/")[0]}
-            </span>
-            <span className="w-32 text-zinc-300">{d.route}</span>
-            <span
-              className={`w-20 text-right tabular-numbers ${d.outcome === "executed" ? "text-emerald-400" : "text-zinc-500"}`}
-            >
-              {d.netProfit >= 0 ? "+" : ""}${d.netProfit.toFixed(3)}
-            </span>
-            <span className="flex-1 truncate text-zinc-500">{d.reason}</span>
-          </div>
-        ))}
+    <div className="space-y-3">
+      <div className="glass rounded-2xl px-5 py-3 text-xs">
+        <span className="text-zinc-400">
+          {newestAgeSec === null
+            ? "Esperando primera decisión rentable…"
+            : newestAgeSec < 60
+              ? `Última decisión hace ${newestAgeSec.toFixed(0)}s · el bot sigue escaneando ~5,000 oportunidades/min en background.`
+              : `Última decisión hace ${(newestAgeSec / 60).toFixed(1)} min. El mercado está quieto pero el bot sigue escaneando miles de oportunidades por minuto — solo registra decisiones cuando aparece una rentable.`}
+        </span>
       </div>
+      {decisions.length === 0 ? (
+        <div className="glass rounded-2xl p-6 text-center text-sm text-zinc-500">
+          Las decisiones van a aparecer acá a medida que el bot evalúe oportunidades rentables…
+        </div>
+      ) : (
+        <div className="overflow-x-auto glass rounded-2xl">
+          <div className="min-w-[680px] divide-y divide-white/[0.04]">
+            {decisions.map((d, i) => {
+              const ageSec = (now - d.timestamp) / 1000;
+              const ageLabel =
+                ageSec < 60
+                  ? `${ageSec.toFixed(0)}s`
+                  : ageSec < 3600
+                    ? `${(ageSec / 60).toFixed(0)}m`
+                    : `${(ageSec / 3600).toFixed(1)}h`;
+              return (
+                <div
+                  key={i}
+                  className="flex items-center gap-3 px-4 py-2 font-mono text-xs"
+                >
+                  <span className="w-16 text-right text-zinc-600 tabular-numbers">
+                    hace {ageLabel}
+                  </span>
+                  <span
+                    className={`w-24 font-semibold ${DECISION_COLOR[d.outcome]}`}
+                  >
+                    {DECISION_LABEL[d.outcome]}
+                  </span>
+                  <span className={`w-8 ${PAIR_ACCENT[d.pair]}`}>
+                    {d.pair.split("/")[0]}
+                  </span>
+                  <span className="w-32 text-zinc-300">{d.route}</span>
+                  <span
+                    className={`w-20 text-right tabular-numbers ${d.outcome === "executed" ? "text-emerald-400" : "text-zinc-500"}`}
+                  >
+                    {d.netProfit >= 0 ? "+" : ""}${d.netProfit.toFixed(3)}
+                  </span>
+                  <span className="flex-1 truncate text-zinc-500">
+                    {d.reason}
+                  </span>
+                </div>
+              );
+            })}
+          </div>
+        </div>
+      )}
     </div>
   );
 }

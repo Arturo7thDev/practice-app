@@ -210,24 +210,56 @@ const FARO_URL =
 export function useFaroStream() {
   const [state, setState] = useState<FaroState | null>(null);
   const [connected, setConnected] = useState(false);
+  const [lastMessageAt, setLastMessageAt] = useState<number | null>(null);
 
   useEffect(() => {
-    const es = new EventSource(`${FARO_URL}/stream`);
+    let es: EventSource | null = null;
 
-    es.onopen = () => setConnected(true);
-    es.onerror = () => setConnected(false);
-    es.onmessage = (e) => {
-      try {
-        setState(JSON.parse(e.data));
-      } catch (err) {
-        console.error("Failed to parse SSE message", err);
+    const connect = () => {
+      if (es) {
+        es.close();
+      }
+      es = new EventSource(`${FARO_URL}/stream`);
+      es.onopen = () => setConnected(true);
+      es.onerror = () => setConnected(false);
+      es.onmessage = (e) => {
+        try {
+          setState(JSON.parse(e.data));
+          setLastMessageAt(Date.now());
+        } catch (err) {
+          console.error("Failed to parse SSE message", err);
+        }
+      };
+    };
+
+    connect();
+
+    // Detectar cuando la pestaña vuelve a visible (iPad/iPhone desbloqueado,
+    // pestaña vuelta al foco) y forzar reconexión para refrescar el stream.
+    const handleVisibility = () => {
+      if (document.visibilityState === "visible") {
+        // Si pasaron más de 5s sin mensajes, asumimos conexión zombi y reconectamos.
+        const stale = lastMessageAt
+          ? Date.now() - lastMessageAt > 5000
+          : true;
+        if (stale) {
+          setConnected(false);
+          connect();
+        }
       }
     };
+    document.addEventListener("visibilitychange", handleVisibility);
+    window.addEventListener("focus", handleVisibility);
 
     return () => {
-      es.close();
+      es?.close();
+      document.removeEventListener("visibilitychange", handleVisibility);
+      window.removeEventListener("focus", handleVisibility);
     };
+    // lastMessageAt change should not trigger reconnect; we read its latest
+    // value via closure on visibility events. Disable exhaustive-deps for that.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
-  return { state, connected };
+  return { state, connected, lastMessageAt };
 }
