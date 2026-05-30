@@ -189,6 +189,36 @@ export interface ExecutedTriangularTrade {
   totalFeesUSD: number;
 }
 
+export interface NaiveTrade {
+  id: string;
+  timestamp: number;
+  pair: Pair;
+  buyExchange: ExchangeName;
+  sellExchange: ExchangeName;
+  buyPrice: number;
+  sellPrice: number;
+  volume: number;
+  grossProfit: number;
+  retailFees: number;
+  netResult: number;
+}
+
+export interface NaiveStats {
+  initialCapitalUSDT: number;
+  initialBTC: number;
+  initialETH: number;
+  totalTrades: number;
+  cumulativeNet: number;
+  currentPortfolioValueUSDT: number;
+  delta: number;
+  deltaPercent: number;
+}
+
+export interface NaiveState {
+  stats: NaiveStats;
+  recentTrades: NaiveTrade[];
+}
+
 export interface FaroState {
   tickersByPair: Record<Pair, Ticker[]>;
   opportunitiesByPair: Record<Pair, Opportunity[]>;
@@ -200,6 +230,7 @@ export interface FaroState {
   decisions: Decision[];
   triangularOpportunities: TriangularOpportunity[];
   triangularTrades: ExecutedTriangularTrade[];
+  naive: NaiveState;
   timestamp: number;
 }
 

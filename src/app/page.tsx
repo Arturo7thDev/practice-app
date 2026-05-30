@@ -8,6 +8,8 @@ import {
   type ExchangeStats,
   type ExecutedTrade,
   type ExecutedTriangularTrade,
+  type NaiveState,
+  type NaiveTrade,
   type Opportunity,
   type Pair,
   type PortfolioStats,
@@ -30,7 +32,9 @@ import {
   Network,
   Radio,
   ShieldCheck,
+  Skull,
   Sparkles,
+  Swords,
   TrendingUp,
 } from "lucide-react";
 import {
@@ -99,7 +103,23 @@ export default function Home() {
 
         <DifferentiatorBanner />
 
-        <HeroStats stats={state?.stats} counters={state?.counters} />
+        <HeroStats
+          stats={state?.stats}
+          counters={state?.counters}
+          naive={state?.naive.stats}
+        />
+
+        <Section
+          icon={Swords}
+          eyebrow="Comparativa en vivo"
+          title="Faro vs Bot retail naive"
+          subtitle="Mismo data, mismas oportunidades, mismo capital inicial. Filtros distintos: Faro corta por NET, Naive ejecuta cualquier gross > 0 a fees retail (0.5%)."
+        >
+          <NaiveComparison
+            faro={state?.stats}
+            naive={state?.naive.stats}
+          />
+        </Section>
 
         <Section
           icon={Brain}
@@ -149,10 +169,13 @@ export default function Home() {
         <Section
           icon={TrendingUp}
           eyebrow="Performance"
-          title="Curva de equity"
-          subtitle="P&L neto acumulado a través de ambos pares"
+          title="Curva de equity · Faro vs Naive"
+          subtitle="P&L neto acumulado de ambos bots sobre los mismos datos en tiempo real"
         >
-          <EquityCurve trades={state?.executedTrades ?? []} />
+          <EquityCurve
+            faroTrades={state?.executedTrades ?? []}
+            naiveTrades={state?.naive.recentTrades ?? []}
+          />
         </Section>
 
         <Section
@@ -407,9 +430,11 @@ function Stat({
 function HeroStats({
   stats,
   counters,
+  naive,
 }: {
   stats: PortfolioStats | undefined;
   counters: ScanCounters | undefined;
+  naive: { cumulativeNet: number; totalTrades: number } | undefined;
 }) {
   const profit = stats?.totalArbitrageProfit ?? 0;
   const retailLoss = stats?.hypotheticalRetailLoss ?? 0;
@@ -424,8 +449,13 @@ function HeroStats({
   const safePct = profitable > 0 ? (safeSkipped / profitable) * 100 : 0;
   const throttlePct = profitable > 0 ? (throttled / profitable) * 100 : 0;
 
+  // Vs Naive bot — la diferencia real entre Faro y "el bot promedio"
+  const naiveLoss = naive?.cumulativeNet ?? 0;
+  const naiveTrades = naive?.totalTrades ?? 0;
+  const advantage = profit - naiveLoss;
+
   return (
-    <section className="mb-10 grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-5">
+    <section className="mb-10 grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-6">
       <StatCard
         label="Ganancia Faro"
         value={
@@ -470,6 +500,20 @@ function HeroStats({
           counters
             ? `capturadas · ${safePct.toFixed(0)}% seguridad · ${throttlePct.toFixed(0)}% throttle`
             : "de oportunidades rentables"
+        }
+      />
+      <StatCard
+        label="Ventaja sobre bot Naive"
+        value={
+          naive
+            ? `${advantage >= 0 ? "+" : ""}$${advantage.toFixed(2)}`
+            : "—"
+        }
+        valueClass={advantage > 0 ? "text-emerald-400" : "text-zinc-400"}
+        subtitle={
+          naive
+            ? `Naive ejecutó ${naiveTrades} trades · perdió $${Math.abs(naiveLoss).toFixed(2)}`
+            : "Misma data, fees retail (0.5%)"
         }
       />
       <StatCard
@@ -1167,48 +1211,90 @@ function BalanceRow({
   );
 }
 
-function EquityCurve({ trades }: { trades: ExecutedTrade[] }) {
-  const data = [...trades]
-    .reverse()
-    .reduce<{ time: string; pnl: number; ts: number }[]>((acc, t) => {
-      const prev = acc.length > 0 ? acc[acc.length - 1].pnl : 0;
-      acc.push({
-        time: new Date(t.timestamp).toLocaleTimeString("en-US", {
-          hour12: false,
-        }),
-        pnl: prev + t.netProfit,
-        ts: t.timestamp,
-      });
-      return acc;
-    }, []);
+function EquityCurve({
+  faroTrades,
+  naiveTrades,
+}: {
+  faroTrades: ExecutedTrade[];
+  naiveTrades: NaiveTrade[];
+}) {
+  // Mergear timeline: unimos los timestamps de ambos bots, calculamos cumulativo
+  // para cada uno en cada punto en el tiempo.
+  const faroChrono = [...faroTrades].reverse();
+  const naiveChrono = [...naiveTrades].reverse();
+
+  type Point = { time: string; ts: number; faro: number; naive: number };
+  const allTimestamps = new Set<number>();
+  for (const t of faroChrono) allTimestamps.add(t.timestamp);
+  for (const t of naiveChrono) allTimestamps.add(t.timestamp);
+  const sortedTs = Array.from(allTimestamps).sort((a, b) => a - b);
+
+  const data: Point[] = [];
+  let faroCum = 0;
+  let naiveCum = 0;
+  let faroIdx = 0;
+  let naiveIdx = 0;
+  for (const ts of sortedTs) {
+    while (faroIdx < faroChrono.length && faroChrono[faroIdx].timestamp <= ts) {
+      faroCum += faroChrono[faroIdx].netProfit;
+      faroIdx++;
+    }
+    while (
+      naiveIdx < naiveChrono.length &&
+      naiveChrono[naiveIdx].timestamp <= ts
+    ) {
+      naiveCum += naiveChrono[naiveIdx].netResult;
+      naiveIdx++;
+    }
+    data.push({
+      time: new Date(ts).toLocaleTimeString("en-US", { hour12: false }),
+      ts,
+      faro: faroCum,
+      naive: naiveCum,
+    });
+  }
 
   if (data.length === 0) {
     return (
       <div className="glass rounded-2xl p-8 text-center text-sm text-zinc-500">
-        La curva de equity aparecerá tras el primer trade ejecutado.
+        La curva de equity aparecerá cuando alguno de los bots ejecute su
+        primer trade.
       </div>
     );
   }
 
-  const finalPnL = data[data.length - 1].pnl;
-  const isPositive = finalPnL >= 0;
-  const lineColor = isPositive ? "#34d399" : "#f87171";
+  const finalFaro = data[data.length - 1].faro;
+  const finalNaive = data[data.length - 1].naive;
+  const gap = finalFaro - finalNaive;
 
   return (
-    <div className="glass rounded-2xl p-4">
-      <div className="mb-2 flex items-baseline justify-between">
-        <span className="text-xs uppercase tracking-wide text-zinc-500">
-          P&amp;L neto acumulado · {data.length} trades
-        </span>
-        <span
-          className={`font-mono tabular-numbers text-lg font-semibold ${
-            isPositive ? "text-emerald-400" : "text-red-400"
-          }`}
-        >
-          {isPositive ? "+" : ""}${finalPnL.toFixed(2)}
-        </span>
+    <div className="glass rounded-2xl p-4 sm:p-6">
+      <div className="mb-4 flex flex-wrap items-baseline justify-between gap-3">
+        <div className="flex items-center gap-5 text-xs">
+          <div className="flex items-center gap-2">
+            <span className="inline-block h-2 w-4 rounded bg-emerald-400" />
+            <span className="text-zinc-300 font-medium">Faro</span>
+            <span
+              className={`font-mono tabular-numbers ${finalFaro >= 0 ? "text-emerald-400" : "text-red-400"}`}
+            >
+              {finalFaro >= 0 ? "+" : ""}${finalFaro.toFixed(2)}
+            </span>
+          </div>
+          <div className="flex items-center gap-2">
+            <span className="inline-block h-2 w-4 rounded bg-red-400" />
+            <span className="text-zinc-300 font-medium">Naive</span>
+            <span
+              className={`font-mono tabular-numbers ${finalNaive >= 0 ? "text-emerald-400" : "text-red-400"}`}
+            >
+              {finalNaive >= 0 ? "+" : ""}${finalNaive.toFixed(2)}
+            </span>
+          </div>
+        </div>
+        <div className="font-mono text-sm tabular-numbers text-emerald-300">
+          gap +${gap.toFixed(2)}
+        </div>
       </div>
-      <div className="h-64 w-full">
+      <div className="h-72 w-full">
         <ResponsiveContainer width="100%" height="100%">
           <LineChart
             data={data}
@@ -1230,27 +1316,98 @@ function EquityCurve({ trades }: { trades: ExecutedTrade[] }) {
             />
             <Tooltip
               contentStyle={{
-                background: "#18181b",
-                border: "1px solid #3f3f46",
-                borderRadius: 8,
+                background: "#09090b",
+                border: "1px solid #27272a",
+                borderRadius: 12,
                 fontSize: 12,
               }}
               labelStyle={{ color: "#a1a1aa" }}
-              formatter={(value) => [
+              formatter={(value, name) => [
                 `$${Number(value).toFixed(2)}`,
-                "P&L acumulado",
+                name === "faro" ? "Faro (inst)" : "Naive (retail)",
               ]}
             />
             <ReferenceLine y={0} stroke="#52525b" strokeDasharray="4 4" />
             <Line
               type="monotone"
-              dataKey="pnl"
-              stroke={lineColor}
+              dataKey="naive"
+              stroke="#f87171"
               strokeWidth={2}
+              dot={false}
+            />
+            <Line
+              type="monotone"
+              dataKey="faro"
+              stroke="#34d399"
+              strokeWidth={2.5}
               dot={false}
             />
           </LineChart>
         </ResponsiveContainer>
+      </div>
+    </div>
+  );
+}
+
+function NaiveComparison({
+  faro,
+  naive,
+}: {
+  faro: PortfolioStats | undefined;
+  naive: { cumulativeNet: number; totalTrades: number; delta: number; deltaPercent: number } | undefined;
+}) {
+  if (!faro || !naive) {
+    return (
+      <div className="glass rounded-2xl p-6 text-sm text-zinc-500">
+        Inicializando comparativa…
+      </div>
+    );
+  }
+  const faroNet = faro.totalArbitrageProfit;
+  const advantage = faroNet - naive.cumulativeNet;
+  return (
+    <div className="grid grid-cols-1 gap-4 md:grid-cols-3">
+      <div className="glass rounded-2xl p-5">
+        <div className="flex items-center gap-2 text-[10px] font-semibold uppercase tracking-[0.2em] text-emerald-400">
+          <Sparkles className="h-3.5 w-3.5" />
+          Faro (institucional)
+        </div>
+        <div
+          className={`mt-2.5 font-mono text-3xl font-semibold tabular-numbers ${faroNet >= 0 ? "text-emerald-400" : "text-red-400"}`}
+        >
+          {faroNet >= 0 ? "+" : ""}${faroNet.toFixed(2)}
+        </div>
+        <div className="mt-2 text-xs text-zinc-500">
+          {faro.totalTrades} trades · filtro por NET tras 4-stack cost model
+        </div>
+      </div>
+
+      <div className="glass rounded-2xl p-5">
+        <div className="flex items-center gap-2 text-[10px] font-semibold uppercase tracking-[0.2em] text-red-400">
+          <Skull className="h-3.5 w-3.5" />
+          Naive (retail 0.5%)
+        </div>
+        <div
+          className={`mt-2.5 font-mono text-3xl font-semibold tabular-numbers ${naive.cumulativeNet >= 0 ? "text-emerald-400" : "text-red-400"}`}
+        >
+          {naive.cumulativeNet >= 0 ? "+" : ""}${naive.cumulativeNet.toFixed(2)}
+        </div>
+        <div className="mt-2 text-xs text-zinc-500">
+          {naive.totalTrades} trades · filtro solo por GROSS positivo
+        </div>
+      </div>
+
+      <div className="rounded-2xl border border-emerald-400/30 bg-gradient-to-br from-emerald-400/10 to-transparent p-5 backdrop-blur-xl">
+        <div className="flex items-center gap-2 text-[10px] font-semibold uppercase tracking-[0.2em] text-emerald-300">
+          <Swords className="h-3.5 w-3.5" />
+          Ventaja Faro
+        </div>
+        <div className="mt-2.5 font-mono text-3xl font-semibold tabular-numbers text-emerald-300">
+          {advantage >= 0 ? "+" : ""}${advantage.toFixed(2)}
+        </div>
+        <div className="mt-2 text-xs text-emerald-200/70">
+          Diferencia neta sobre el bot retail · mismos datos, mismos exchanges
+        </div>
       </div>
     </div>
   );
