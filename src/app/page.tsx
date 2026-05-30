@@ -120,7 +120,7 @@ export default function Home() {
           icon={Swords}
           eyebrow="Comparativa en vivo"
           title="Faro vs Bot retail naive"
-          subtitle="Mismo data, mismas oportunidades, mismo capital inicial. Filtros distintos: Faro corta por NET, Naive ejecuta cualquier gross > 0 a fees retail (0.5%)."
+          subtitle="Mismos datos, mismas oportunidades, mismo capital inicial. Filtros distintos: Faro corta por NET, Naive ejecuta cualquier gross > 0 a fees retail (0.5%)."
         >
           <NaiveComparison
             faro={state?.stats}
@@ -130,9 +130,9 @@ export default function Home() {
 
         <Section
           icon={Brain}
-          eyebrow="Inteligencia"
+          eyebrow="En conjunto"
           title="Estrategia"
-          subtitle="Métricas agregadas de performance en todas las ejecuciones"
+          subtitle="Cómo le va al bot en conjunto: qué tanto acierta, cuánto deja cada trade y qué tan rápido decide."
         >
           <StrategyPanel stats={state?.stats} />
         </Section>
@@ -178,7 +178,7 @@ export default function Home() {
 
         <Section
           icon={Gauge}
-          eyebrow="Proceso"
+          eyebrow="Criterio"
           title="Decisiones del bot"
           subtitle="Cada oportunidad rentable clasificada por veredicto"
         >
@@ -196,16 +196,16 @@ export default function Home() {
 
         <Section
           icon={AlertTriangle}
-          eyebrow="Riesgo"
+          eyebrow="Resguardo"
           title="Métricas de riesgo"
-          subtitle="Drawdown, exposición, desbalance de wallet, circuit breaker"
+          subtitle="Lo que el bot vigila para no quemar capital — drawdown, exposición, desbalance entre wallets y circuit breaker."
         >
           <RiskPanel risk={state?.stats.risk} />
         </Section>
 
         <Section
           icon={Radio}
-          eyebrow="Tiempo real"
+          eyebrow="En bitácora"
           title="Decisiones en vivo"
           subtitle="Últimas 15 evaluaciones con razonamiento completo"
         >
@@ -214,7 +214,7 @@ export default function Home() {
 
         <Section
           icon={TrendingUp}
-          eyebrow="Performance"
+          eyebrow="Trayectoria"
           title="Curva de equity · Faro vs Naive"
           subtitle="P&L neto acumulado de ambos bots sobre los mismos datos en tiempo real"
         >
@@ -281,7 +281,7 @@ export default function Home() {
 
         <Section
           icon={Sparkles}
-          eyebrow="Avanzado"
+          eyebrow="Ciclo cerrado"
           title="Arbitraje triangular"
           subtitle="Ciclos intra-exchange BTC ↔ ETH ↔ USDT, ambas direcciones"
         >
@@ -757,7 +757,7 @@ function HeroStats({
         }
       />
       <StatCard
-        label="Mismas trades en retail (0.5%)"
+        label="Mismos trades en retail (0.5%)"
         value={
           stats
             ? `${retailLoss >= 0 ? "+" : ""}$${retailLoss.toFixed(2)}`
@@ -773,7 +773,7 @@ function HeroStats({
         subtitle="Lo que daría un bot retail"
       />
       <StatCard
-        label="Precisión de decisión"
+        label="Captura de oportunidades"
         value={counters ? `${captureRate.toFixed(0)}%` : "—"}
         valueClass="text-[var(--signal-up)]"
         subtitle={
@@ -835,7 +835,7 @@ function DifferentiatorBanner() {
           <span className="text-[var(--type-ink)]">retiro amortizado</span> +{" "}
           <span className="text-[var(--type-ink)]">slippage estimado</span> +{" "}
           <span className="text-[var(--type-ink)]">latencia de red</span> en cada
-          oportunidad. La mayoría de bots solo cuentan fees de trading — por
+          oportunidad. La mayoría de los bots solo cuentan fees de trading — por
           eso sus &ldquo;ganancias&rdquo; se desvanecen en la realidad.
         </p>
       </div>
@@ -1207,7 +1207,7 @@ function StrategyPanel({ stats }: { stats: PortfolioStats | undefined }) {
   if (!stats) {
     return (
       <div className="glass rounded-2xl p-6 text-sm text-[var(--type-mute)]">
-        Calculando métricas de estrategia…
+        Inicializando métricas de estrategia…
       </div>
     );
   }
@@ -1254,7 +1254,7 @@ function FintechPanel({ fintech }: { fintech: FintechMetrics | undefined }) {
   if (!fintech) {
     return (
       <div className="glass rounded-2xl p-6 text-sm text-[var(--type-mute)]">
-        Computando métricas fintech…
+        Inicializando métricas fintech…
       </div>
     );
   }
@@ -1320,7 +1320,7 @@ function FintechPanel({ fintech }: { fintech: FintechMetrics | undefined }) {
           valueClass={pfColor}
         />
         <MetricBox
-          label="Win rate"
+          label="Tasa de acierto"
           value={`${(fintech.winRate * 100).toFixed(0)}%`}
           subtitle="% trades con net > 0"
           valueClass={
@@ -1514,14 +1514,15 @@ function TobiPanel({
         <div className="mt-3 rounded-xl bg-[var(--abyss)]/60 p-4 font-mono text-xs text-[var(--type-ink)]">
           TOBI = (bidQty − askQty) / (bidQty + askQty)
           <br />
-          survivalProb = (TOBI<sub>sell</sub> − TOBI<sub>buy</sub> + 2) / 4
+          survivalProb = (TOBI<sub>buy</sub> − TOBI<sub>sell</sub> + 2) / 4
         </div>
         <p className="mt-3 text-sm leading-relaxed text-[var(--type-mute)]">
-          Si en el exchange donde compramos hay presión vendedora, el precio va
-          a bajar (mejor para nosotros). Si en el exchange donde vendemos hay
-          presión compradora, el precio va a subir (mejor para nosotros). Las
-          dos cosas juntas hacen que el spread <strong>crezca</strong> y la
-          oportunidad <strong>viva más tiempo</strong>.
+          El signo se calibró empíricamente contra hit rates observados en
+          producción. En cripto a horizonte 200–500ms los market makers actúan
+          como contrapeso del flujo direccional, así que el spread sobrevive
+          más cuando <strong>ambos exchanges muestran imbalances opuestos</strong>:
+          presión compradora en el de compra y vendedora en el de venta. La
+          intuición ingenua era al revés — los datos mandan.
         </p>
         <p className="mt-2 text-xs text-[var(--type-mute)]">
           El bot bloquea ejecución cuando survivalProb &lt; 0.5. Bloqueadas
@@ -1692,7 +1693,7 @@ function KellyPanel({ kelly }: { kelly: KellyMetrics | undefined }) {
       {/* Métricas en vivo */}
       <div className="grid grid-cols-2 gap-3 lg:grid-cols-4">
         <MetricBox
-          label="Position size actual"
+          label="Tamaño de posición actual"
           value={fmtUSD(kelly.currentPositionSizeUSDT)}
           subtitle={
             kelly.isReliable
@@ -1718,7 +1719,7 @@ function KellyPanel({ kelly }: { kelly: KellyMetrics | undefined }) {
           }
         />
         <MetricBox
-          label="Win probability"
+          label="Probabilidad de acierto"
           value={kelly.samples > 0 ? fmtPct(kelly.winProb) : "—"}
           subtitle={`${kelly.samples} trades válidos`}
           valueClass={
@@ -1726,7 +1727,7 @@ function KellyPanel({ kelly }: { kelly: KellyMetrics | undefined }) {
           }
         />
         <MetricBox
-          label="Edge ratio (b)"
+          label="Ventaja (b)"
           value={kelly.samples > 0 ? fmtRatio(kelly.edgeRatio) : "—"}
           subtitle="avg_win / |avg_loss|"
           valueClass={
@@ -2058,7 +2059,7 @@ function DecisionsFeed({ decisions }: { decisions: Decision[] }) {
       </div>
       {decisions.length === 0 ? (
         <div className="glass rounded-2xl p-6 text-center text-sm text-[var(--type-mute)]">
-          Las decisiones van a aparecer acá a medida que el bot evalúe oportunidades rentables…
+          Las decisiones van a aparecer aquí a medida que el bot evalúe oportunidades rentables…
         </div>
       ) : (
         <div className="overflow-x-auto glass rounded-2xl">
@@ -2110,7 +2111,7 @@ function CostBreakdown({ stats }: { stats: PortfolioStats | undefined }) {
   if (!stats || stats.totalTrades === 0) {
     return (
       <div className="glass rounded-2xl p-6 text-sm text-[var(--type-mute)]">
-        Cost breakdown appears after the first executed trade.
+        Sin trades todavía. El desglose aparece cuando el primero sobreviva al modelo de costos.
       </div>
     );
   }
@@ -2675,7 +2676,7 @@ function TradesTable({ trades }: { trades: ExecutedTrade[] }) {
         <tbody className="font-mono tabular-numbers">
           {trades.slice(0, 20).map((t) => {
             const asset = t.pair.split("/")[0];
-            const costTooltip = `trading $${t.tradingFees.toFixed(3)} · withdrawal $${t.amortizedWithdrawal.toFixed(3)} · slippage $${t.estimatedSlippage.toFixed(3)} · latency $${t.latencyCost.toFixed(3)}`;
+            const costTooltip = `trading $${t.tradingFees.toFixed(3)} · retiro $${t.amortizedWithdrawal.toFixed(3)} · slippage $${t.estimatedSlippage.toFixed(3)} · latencia $${t.latencyCost.toFixed(3)}`;
             return (
               <tr key={t.id} className="border-t border-[var(--foam)]">
                 <td className="px-4 py-2 text-[var(--type-mute)]">
@@ -2961,17 +2962,17 @@ function Footer() {
   return (
     <footer className="mt-12 space-y-2 border-t border-[var(--foam)] pt-6 text-xs text-[var(--type-mute)]">
       <p>
-        Faro models market-maker tier (taker{" "}
-        <span className="font-mono">0.02–0.04%</span>, accessible to operators
-        with $4B+ monthly volume — Binance VIP 9, Coinbase top tier). At retail
-        fees (<span className="font-mono">0.5%</span>), every profitable
-        opportunity above would become a loss.
+        Faro modela el tier market-maker (taker{" "}
+        <span className="font-mono">0.02–0.04%</span>), accesible solo para
+        operadores con más de $4B de volumen mensual — Binance VIP 9, nivel tope
+        de Coinbase. A fees retail (<span className="font-mono">0.5%</span>),
+        cada oportunidad rentable de arriba se volvería pérdida.
       </p>
       <p>
-        Withdrawal fees (~0.0001 BTC, ~$1 USDT per exchange) are amortized
-        across rebalancing cycles — negligible per trade at this volume tier.
-        Real arbitrage operators batch transfers nightly to keep this cost
-        below 0.001% of daily volume.
+        Los costos de retiro (~0.0001 BTC, ~$1 USDT por exchange) se amortizan
+        entre ciclos de rebalanceo — despreciables por trade a este nivel de
+        volumen. Los operadores de arbitraje reales agrupan transferencias cada
+        noche para mantener este costo por debajo del 0.001% del volumen diario.
       </p>
     </footer>
   );
