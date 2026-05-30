@@ -297,22 +297,33 @@ function Hero({
 }) {
   const scansPerSec = useThroughput(counters?.opportunitiesScanned);
   return (
-    <header className="relative mb-16 pt-4 sm:pt-8">
-      <FloatingNetwork className="pointer-events-none absolute inset-0 -z-10 opacity-50" />
+    <header className="relative mb-16 overflow-hidden pt-4 sm:pt-8">
+      {/* Haz del faro — barre el hero entero por detrás del contenido */}
+      <Lighthouse className="pointer-events-none absolute -right-20 -top-10 h-[520px] w-[520px] opacity-90 sm:-right-10" />
+
       <div className="relative">
-        <div className="mb-6 inline-flex flex-wrap items-center gap-2 rounded-full border border-white/10 bg-white/5 px-3 py-1.5 text-xs font-medium text-zinc-300 backdrop-blur">
+        {/* Coordenadas náuticas en la esquina superior izquierda */}
+        <div className="caption-nav mb-5 flex items-center gap-3">
+          <span>19°25′N · 99°08′W</span>
+          <span className="text-[var(--foam)]">·</span>
+          <span>{new Date().toISOString().slice(0, 10)}</span>
+        </div>
+
+        <div className="mb-6 inline-flex flex-wrap items-center gap-2 rounded-sm border border-[var(--foam)] bg-[var(--abyss)]/60 px-3 py-1.5 text-xs font-medium text-[var(--type-mute)] backdrop-blur">
           <span
             className={`live-dot inline-block h-1.5 w-1.5 rounded-full ${
-              connected ? "bg-emerald-400" : "bg-zinc-600"
+              connected ? "" : "bg-[var(--mist)]"
             }`}
           />
-          <span>{connected ? "en vivo" : "conectando…"}</span>
+          <span className="uppercase tracking-[0.18em] text-[10px]">
+            {connected ? "transmitiendo" : "conectando…"}
+          </span>
           {connected && (
             <>
-              <span className="text-zinc-700">·</span>
-              <span className="font-mono tabular-numbers text-zinc-400">
+              <span className="text-[var(--foam)]">·</span>
+              <span className="font-mono tabular-numbers text-[var(--type-ink)]">
                 {scansPerSec.toFixed(1)}
-                <span className="ml-0.5 text-zinc-600">scans/s</span>
+                <span className="ml-0.5 text-[var(--type-faint)]">scans/s</span>
               </span>
             </>
           )}
@@ -320,37 +331,46 @@ function Hero({
 
         <div className="flex flex-col gap-8 lg:flex-row lg:items-start lg:gap-12">
           <div className="flex-1">
-            <h1 className="text-5xl font-semibold leading-[1.05] tracking-tight text-white sm:text-6xl lg:text-7xl">
-              Arbitraje cripto<br />
-              <span className="bg-gradient-to-r from-emerald-300 via-emerald-400 to-teal-300 bg-clip-text text-transparent">
-                honesto.
+            <h1 className="font-display text-5xl font-medium leading-[1.02] tracking-[-0.025em] text-[var(--type-ink)] sm:text-6xl lg:text-[5.5rem]">
+              Arbitraje cripto
+              <br />
+              <span
+                className="italic"
+                style={{
+                  color: "var(--beacon)",
+                  fontVariationSettings: '"SOFT" 100',
+                }}
+              >
+                honesto
               </span>
+              <span className="text-[var(--beacon)]">.</span>
             </h1>
-            <p className="mt-6 max-w-2xl text-base leading-relaxed text-zinc-400 sm:text-lg">
-              Arbitraje en tiempo real, lineal y triangular, entre{" "}
-              <span className="text-zinc-200">3 exchanges</span> y{" "}
-              <span className="text-zinc-200">2 pares</span>. Solo ejecuta lo
-              que sobrevive el costo completo — fees, slippage, retiros y
-              latencia. Hecho para operadores que sí miran lo que de verdad
-              termina en su wallet.
+            <p className="mt-7 max-w-2xl text-base leading-relaxed text-[var(--type-mute)] sm:text-lg">
+              Bot de arbitraje BTC y ETH entre{" "}
+              <span className="text-[var(--type-ink)]">3 exchanges</span>,
+              lineal y triangular. Solo ejecuta lo que sobrevive al modelo
+              completo de costos — fees, retiros, slippage y latencia.{" "}
+              <span className="text-[var(--type-ink)]">
+                Sin la mentira que infla los demos.
+              </span>
             </p>
-            <div className="mt-8 flex flex-wrap items-center gap-x-8 gap-y-3 text-sm text-zinc-500">
+            <div className="mt-9 flex flex-wrap items-baseline gap-x-8 gap-y-3 text-sm text-[var(--type-faint)]">
               <Stat
                 n={(counters?.opportunitiesScanned ?? 0).toLocaleString()}
                 label="oportunidades escaneadas"
-                tone="text-zinc-200"
+                tone="text-[var(--type-ink)]"
               />
-              <span className="text-zinc-700">·</span>
+              <span className="text-[var(--foam)]">·</span>
               <Stat
                 n={(counters?.profitableDetected ?? 0).toLocaleString()}
-                label="rentables tras fees"
-                tone="text-amber-400"
+                label="rentables tras costos"
+                tone="text-[var(--beacon)]"
               />
-              <span className="text-zinc-700">·</span>
+              <span className="text-[var(--foam)]">·</span>
               <Stat
                 n={executedTrades.toLocaleString()}
                 label="trades ejecutados"
-                tone="text-emerald-400"
+                tone="text-[var(--signal-up)]"
               />
             </div>
           </div>
@@ -361,6 +381,178 @@ function Hero({
         </div>
       </div>
     </header>
+  );
+}
+
+/* Lighthouse SVG — el faro físico con su haz rotando.
+   El haz (.beacon-sweep) gira lento (14s) sobre el orb. El glow del orb
+   pulsa por separado. Diseño funcional al concepto, no decorativo. */
+function Lighthouse({ className }: { className?: string }) {
+  return (
+    <svg
+      viewBox="0 0 600 600"
+      className={className}
+      xmlns="http://www.w3.org/2000/svg"
+      aria-hidden
+    >
+      <defs>
+        {/* Haz de luz — cono cálido que decae con la distancia */}
+        <linearGradient id="beam-grad" x1="0%" y1="50%" x2="100%" y2="50%">
+          <stop offset="0%" stopColor="#f7931a" stopOpacity="0.55" />
+          <stop offset="40%" stopColor="#ffb04a" stopOpacity="0.18" />
+          <stop offset="100%" stopColor="#f7931a" stopOpacity="0" />
+        </linearGradient>
+        {/* Glow del orb del faro */}
+        <radialGradient id="orb-glow" cx="50%" cy="50%" r="50%">
+          <stop offset="0%" stopColor="#fff8e0" stopOpacity="1" />
+          <stop offset="20%" stopColor="#ffb04a" stopOpacity="0.9" />
+          <stop offset="60%" stopColor="#f7931a" stopOpacity="0.35" />
+          <stop offset="100%" stopColor="#f7931a" stopOpacity="0" />
+        </radialGradient>
+        {/* Niebla sutil del mar nocturno detrás del faro */}
+        <radialGradient id="mist" cx="50%" cy="100%" r="80%">
+          <stop offset="0%" stopColor="#1b2d4f" stopOpacity="0.4" />
+          <stop offset="100%" stopColor="#04081a" stopOpacity="0" />
+        </radialGradient>
+      </defs>
+
+      {/* Niebla detrás */}
+      <ellipse cx="300" cy="450" rx="280" ry="90" fill="url(#mist)" />
+
+      {/* Haz rotando — pivot en el centro del orb (300, 195) */}
+      <g
+        className="beacon-sweep"
+        style={{ transformOrigin: "300px 195px", transformBox: "fill-box" }}
+      >
+        <path
+          d="M 300 195 L 600 95 L 600 295 Z"
+          fill="url(#beam-grad)"
+        />
+        {/* Segundo haz opuesto, más débil — el faro tiene 360° de barrido */}
+        <path
+          d="M 300 195 L 0 145 L 0 245 Z"
+          fill="url(#beam-grad)"
+          opacity="0.4"
+        />
+      </g>
+
+      {/* Glow del orb (pulsando) */}
+      <circle cx="300" cy="195" r="40" fill="url(#orb-glow)">
+        <animate
+          attributeName="r"
+          values="38;48;38"
+          dur="3.2s"
+          repeatCount="indefinite"
+        />
+        <animate
+          attributeName="opacity"
+          values="0.85;1;0.85"
+          dur="3.2s"
+          repeatCount="indefinite"
+        />
+      </circle>
+      {/* Núcleo brillante */}
+      <circle cx="300" cy="195" r="10" fill="#fff8e0" />
+
+      {/* Techo cónico */}
+      <path
+        d="M 282 173 L 300 145 L 318 173 Z"
+        fill="#0f1d3a"
+        stroke="#2a3f64"
+        strokeWidth="1"
+      />
+      {/* Pequeña antena */}
+      <line x1="300" y1="145" x2="300" y2="132" stroke="#2a3f64" strokeWidth="1.5" />
+      <circle cx="300" cy="130" r="2" fill="#f7931a" />
+
+      {/* Cuarto de lámpara — vidriado, deja pasar el glow */}
+      <rect
+        x="282"
+        y="174"
+        width="36"
+        height="42"
+        fill="rgba(247,147,26,0.08)"
+        stroke="#f7931a"
+        strokeWidth="0.5"
+        opacity="0.7"
+      />
+      {/* Soportes verticales del cuarto */}
+      <line x1="290" y1="174" x2="290" y2="216" stroke="#2a3f64" strokeWidth="0.5" />
+      <line x1="310" y1="174" x2="310" y2="216" stroke="#2a3f64" strokeWidth="0.5" />
+
+      {/* Plataforma superior (galería) */}
+      <rect x="274" y="216" width="52" height="6" fill="#0f1d3a" stroke="#2a3f64" />
+      {/* Barandilla */}
+      <line x1="274" y1="216" x2="326" y2="216" stroke="#2a3f64" strokeWidth="0.5" />
+
+      {/* Torre — trapezoide con bandas */}
+      <path
+        d="M 280 222 L 320 222 L 328 380 L 272 380 Z"
+        fill="#0a1429"
+        stroke="#2a3f64"
+        strokeWidth="1"
+      />
+      {/* Bandas cálidas — referencia al haz */}
+      <path
+        d="M 278 252 L 322 252 L 323 268 L 277 268 Z"
+        fill="#f7931a"
+        opacity="0.18"
+      />
+      <path
+        d="M 276 300 L 324 300 L 325 316 L 275 316 Z"
+        fill="#f7931a"
+        opacity="0.18"
+      />
+      <path
+        d="M 274 348 L 326 348 L 327 364 L 273 364 Z"
+        fill="#f7931a"
+        opacity="0.18"
+      />
+
+      {/* Ventana superior */}
+      <rect x="294" y="240" width="12" height="14" fill="#04081a" stroke="#2a3f64" strokeWidth="0.5" />
+      {/* Ventana media */}
+      <rect x="293" y="288" width="14" height="14" fill="#04081a" stroke="#2a3f64" strokeWidth="0.5" />
+      {/* Puerta */}
+      <rect x="291" y="345" width="18" height="35" fill="#04081a" stroke="#2a3f64" strokeWidth="0.5" />
+
+      {/* Base ancha */}
+      <path
+        d="M 260 380 L 340 380 L 350 410 L 250 410 Z"
+        fill="#04081a"
+        stroke="#1b2d4f"
+        strokeWidth="1"
+      />
+
+      {/* Peñasco/isla */}
+      <path
+        d="M 180 410 L 420 410 L 440 440 L 460 460 L 140 460 L 160 440 Z"
+        fill="#04081a"
+      />
+      {/* Texturas sutiles del peñasco */}
+      <path
+        d="M 200 425 L 230 432 L 260 425 L 280 430 L 310 425"
+        stroke="#1b2d4f"
+        strokeWidth="0.7"
+        fill="none"
+      />
+      <path
+        d="M 320 432 L 350 427 L 380 432 L 410 428"
+        stroke="#1b2d4f"
+        strokeWidth="0.7"
+        fill="none"
+      />
+
+      {/* Reflejo del haz sobre el mar abajo */}
+      <ellipse
+        cx="300"
+        cy="500"
+        rx="180"
+        ry="8"
+        fill="#f7931a"
+        opacity="0.08"
+      />
+    </svg>
   );
 }
 
@@ -409,60 +601,6 @@ function LiveTicker({
         </div>
       </div>
     </div>
-  );
-}
-
-function FloatingNetwork({ className }: { className?: string }) {
-  return (
-    <svg
-      className={className}
-      viewBox="0 0 600 400"
-      xmlns="http://www.w3.org/2000/svg"
-      aria-hidden="true"
-    >
-      <defs>
-        <linearGradient id="line-grad" x1="0" y1="0" x2="1" y2="1">
-          <stop offset="0%" stopColor="#34d399" stopOpacity="0.4" />
-          <stop offset="100%" stopColor="#34d399" stopOpacity="0" />
-        </linearGradient>
-        <linearGradient id="line-grad-2" x1="0" y1="0" x2="1" y2="1">
-          <stop offset="0%" stopColor="#a78bfa" stopOpacity="0.35" />
-          <stop offset="100%" stopColor="#a78bfa" stopOpacity="0" />
-        </linearGradient>
-        <radialGradient id="node-glow" cx="50%" cy="50%" r="50%">
-          <stop offset="0%" stopColor="#34d399" stopOpacity="0.6" />
-          <stop offset="100%" stopColor="#34d399" stopOpacity="0" />
-        </radialGradient>
-      </defs>
-      {/* Connecting lines suggesting cross-exchange flow */}
-      <path
-        d="M 80 100 Q 280 60 520 140"
-        stroke="url(#line-grad)"
-        strokeWidth="1"
-        fill="none"
-      />
-      <path
-        d="M 80 280 Q 320 380 540 300"
-        stroke="url(#line-grad-2)"
-        strokeWidth="1"
-        fill="none"
-      />
-      <path
-        d="M 120 200 Q 300 240 480 200"
-        stroke="url(#line-grad)"
-        strokeWidth="0.5"
-        fill="none"
-      />
-      {/* Node glows */}
-      <circle cx="80" cy="100" r="20" fill="url(#node-glow)" />
-      <circle cx="80" cy="100" r="3" fill="#34d399" />
-      <circle cx="520" cy="140" r="20" fill="url(#node-glow)" />
-      <circle cx="520" cy="140" r="3" fill="#34d399" />
-      <circle cx="80" cy="280" r="18" fill="url(#node-glow)" opacity="0.7" />
-      <circle cx="80" cy="280" r="2.5" fill="#a78bfa" />
-      <circle cx="540" cy="300" r="18" fill="url(#node-glow)" opacity="0.7" />
-      <circle cx="540" cy="300" r="2.5" fill="#a78bfa" />
-    </svg>
   );
 }
 
