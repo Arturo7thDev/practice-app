@@ -71,18 +71,18 @@ const PAIR_LABEL: Record<Pair, string> = {
 };
 
 const PAIR_ACCENT: Record<Pair, string> = {
-  "BTC/USDT": "text-amber-400",
-  "ETH/USDT": "text-violet-400",
-  "ETH/BTC": "text-sky-400",
+  "BTC/USDT": "text-[var(--beacon)]",
+  "ETH/USDT": "text-[var(--beacon-warm)]",
+  "ETH/BTC": "text-[var(--beacon-warm)]",
 };
 
 const DECISION_COLOR: Record<Decision["outcome"], string> = {
-  executed: "text-emerald-400",
-  cooldown: "text-amber-400",
-  stale: "text-zinc-500",
-  suspicious: "text-red-400",
-  insufficient_capital: "text-zinc-500",
-  low_survival: "text-sky-400",
+  executed: "text-[var(--signal-up)]",
+  cooldown: "text-[var(--beacon)]",
+  stale: "text-[var(--type-mute)]",
+  suspicious: "text-[var(--signal-down)]",
+  insufficient_capital: "text-[var(--type-mute)]",
+  low_survival: "text-[var(--beacon-warm)]",
 };
 
 const DECISION_LABEL: Record<Decision["outcome"], string> = {
@@ -98,7 +98,7 @@ export default function Home() {
   const { state, connected } = useFaroStream();
 
   return (
-    <main className="min-h-screen text-zinc-50">
+    <main className="min-h-screen text-[var(--type-ink)]">
       <div className="mx-auto max-w-6xl px-5 py-10 sm:px-8 sm:py-14">
         <Hero
           connected={connected}
@@ -581,20 +581,20 @@ function LiveTicker({
   return (
     <div className="glass-strong rounded-3xl p-6">
       <div className="mb-4 flex items-center justify-between">
-        <span className="text-[10px] font-semibold uppercase tracking-[0.22em] text-zinc-500">
+        <span className="text-[10px] font-semibold uppercase tracking-[0.22em] text-[var(--type-mute)]">
           Precios mid en vivo
         </span>
-        <Network className="h-4 w-4 text-emerald-400" />
+        <Network className="h-4 w-4 text-[var(--signal-up)]" />
       </div>
       <div className="space-y-5">
         <div>
           <div className="flex items-baseline justify-between">
-            <span className="text-xs font-medium uppercase tracking-widest text-amber-400/80">
+            <span className="text-xs font-medium uppercase tracking-widest text-[var(--beacon)]/80">
               Bitcoin
             </span>
-            <span className="text-[10px] text-zinc-500">BTC/USDT</span>
+            <span className="text-[10px] text-[var(--type-mute)]">BTC/USDT</span>
           </div>
-          <div className="mt-1 font-mono text-3xl font-semibold tabular-numbers leading-none text-white">
+          <div className="mt-1 font-mono text-3xl font-semibold tabular-numbers leading-none text-[var(--type-ink)]">
             {btcPrice > 0
               ? `$${btcPrice.toLocaleString("en-US", { maximumFractionDigits: 2, minimumFractionDigits: 2 })}`
               : "—"}
@@ -603,12 +603,12 @@ function LiveTicker({
         <div className="h-px bg-white/[0.06]" />
         <div>
           <div className="flex items-baseline justify-between">
-            <span className="text-xs font-medium uppercase tracking-widest text-violet-400/80">
+            <span className="text-xs font-medium uppercase tracking-widest text-[var(--beacon-warm)]/80">
               Ethereum
             </span>
-            <span className="text-[10px] text-zinc-500">ETH/USDT</span>
+            <span className="text-[10px] text-[var(--type-mute)]">ETH/USDT</span>
           </div>
-          <div className="mt-1 font-mono text-3xl font-semibold tabular-numbers leading-none text-white">
+          <div className="mt-1 font-mono text-3xl font-semibold tabular-numbers leading-none text-[var(--type-ink)]">
             {ethPrice > 0
               ? `$${ethPrice.toLocaleString("en-US", { maximumFractionDigits: 2, minimumFractionDigits: 2 })}`
               : "—"}
@@ -652,7 +652,7 @@ function Stat({
       >
         {n}
       </span>
-      <span className="text-zinc-500">{label}</span>
+      <span className="text-[var(--type-mute)]">{label}</span>
     </span>
   );
 }
@@ -718,11 +718,11 @@ function HeroStats({
         valueClass={
           stats
             ? profit > 0
-              ? "text-emerald-400"
+              ? "text-[var(--signal-up)]"
               : profit < 0
-                ? "text-red-400"
-                : "text-zinc-400"
-            : "text-zinc-600"
+                ? "text-[var(--signal-down)]"
+                : "text-[var(--type-mute)]"
+            : "text-[var(--type-faint)]"
         }
         subtitle={
           stats
@@ -740,16 +740,16 @@ function HeroStats({
         valueClass={
           stats
             ? retailLoss < 0
-              ? "text-red-400"
-              : "text-zinc-400"
-            : "text-zinc-600"
+              ? "text-[var(--signal-down)]"
+              : "text-[var(--type-mute)]"
+            : "text-[var(--type-faint)]"
         }
         subtitle="Lo que daría un bot retail"
       />
       <StatCard
         label="Precisión de decisión"
         value={counters ? `${captureRate.toFixed(0)}%` : "—"}
-        valueClass="text-emerald-400"
+        valueClass="text-[var(--signal-up)]"
         subtitle={
           counters
             ? `capturadas · ${safePct.toFixed(0)}% seguridad · ${throttlePct.toFixed(0)}% throttle`
@@ -763,7 +763,7 @@ function HeroStats({
             ? `${advantage >= 0 ? "+" : ""}$${advantage.toFixed(2)}`
             : "—"
         }
-        valueClass={advantage > 0 ? "text-emerald-400" : "text-zinc-400"}
+        valueClass={advantage > 0 ? "text-[var(--signal-up)]" : "text-[var(--type-mute)]"}
         subtitle={
           naive
             ? `Naive ejecutó ${naiveTrades} trades · perdió $${Math.abs(naiveLoss).toFixed(2)}`
@@ -773,7 +773,7 @@ function HeroStats({
       <StatCard
         label="Perdido por cooldown"
         value={counters ? `$${lostOpp.toFixed(2)}` : "—"}
-        valueClass="text-amber-400"
+        valueClass="text-[var(--beacon)]"
         subtitle="Ganancia bloqueada por throttle de 3s"
       />
       <StatCard
@@ -785,7 +785,7 @@ function HeroStats({
               })}`
             : "—"
         }
-        valueClass="text-zinc-50"
+        valueClass="text-[var(--type-ink)]"
         subtitle={
           stats
             ? `Inicial: $${stats.initialCapitalUSDT.toLocaleString()} + ${stats.initialBTC} BTC + ${stats.initialETH} ETH`
@@ -800,15 +800,15 @@ function DifferentiatorBanner() {
   return (
     <div className="glass mb-10 rounded-2xl p-5 sm:p-6">
       <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:gap-5">
-        <span className="shrink-0 self-start rounded-full border border-emerald-400/20 bg-emerald-400/10 px-3 py-1 text-xs font-semibold uppercase tracking-[0.16em] text-emerald-300">
+        <span className="shrink-0 self-start rounded-full border border-emerald-400/20 bg-emerald-400/10 px-3 py-1 text-xs font-semibold uppercase tracking-[0.16em] text-[var(--signal-up)]">
           Modelo de costos 4-stack
         </span>
-        <p className="text-sm leading-relaxed text-zinc-400 sm:text-[15px]">
+        <p className="text-sm leading-relaxed text-[var(--type-mute)] sm:text-[15px]">
           Faro descuenta{" "}
-          <span className="text-zinc-200">fees de trading</span> +{" "}
-          <span className="text-zinc-200">retiro amortizado</span> +{" "}
-          <span className="text-zinc-200">slippage estimado</span> +{" "}
-          <span className="text-zinc-200">latencia de red</span> en cada
+          <span className="text-[var(--type-ink)]">fees de trading</span> +{" "}
+          <span className="text-[var(--type-ink)]">retiro amortizado</span> +{" "}
+          <span className="text-[var(--type-ink)]">slippage estimado</span> +{" "}
+          <span className="text-[var(--type-ink)]">latencia de red</span> en cada
           oportunidad. La mayoría de bots solo cuentan fees de trading — por
           eso sus &ldquo;ganancias&rdquo; se desvanecen en la realidad.
         </p>
@@ -1151,11 +1151,11 @@ function PairPanel({
   return (
     <section className="mb-10">
       <div className="mb-3 flex items-baseline justify-between">
-        <h2 className="text-sm font-medium uppercase tracking-wide text-zinc-500">
+        <h2 className="text-sm font-medium uppercase tracking-wide text-[var(--type-mute)]">
           {PAIR_LABEL[pair]} · {pair}
         </h2>
-        <div className="font-mono text-xs tabular-numbers text-zinc-500">
-          <span className={profit >= 0 ? "text-emerald-400" : "text-red-400"}>
+        <div className="font-mono text-xs tabular-numbers text-[var(--type-mute)]">
+          <span className={profit >= 0 ? "text-[var(--signal-up)]" : "text-[var(--signal-down)]"}>
             {profit >= 0 ? "+" : ""}${profit.toFixed(2)}
           </span>{" "}
           · {trades} trades
@@ -1180,7 +1180,7 @@ function PairPanel({
 function StrategyPanel({ stats }: { stats: PortfolioStats | undefined }) {
   if (!stats) {
     return (
-      <div className="glass rounded-2xl p-6 text-sm text-zinc-500">
+      <div className="glass rounded-2xl p-6 text-sm text-[var(--type-mute)]">
         Calculando métricas de estrategia…
       </div>
     );
@@ -1196,7 +1196,7 @@ function StrategyPanel({ stats }: { stats: PortfolioStats | undefined }) {
         label="Tasa de éxito"
         value={`${successPct}%`}
         subtitle="rentables / escaneadas"
-        valueClass="text-emerald-400"
+        valueClass="text-[var(--signal-up)]"
       />
       <MetricBox
         label="Neto promedio / trade"
@@ -1206,19 +1206,19 @@ function StrategyPanel({ stats }: { stats: PortfolioStats | undefined }) {
             : "—"
         }
         subtitle={`${stats.totalTrades} ejecutadas`}
-        valueClass={avgNet >= 0 ? "text-emerald-400" : "text-red-400"}
+        valueClass={avgNet >= 0 ? "text-[var(--signal-up)]" : "text-[var(--signal-down)]"}
       />
       <MetricBox
         label="Mejor ruta"
         value={best ? `+$${best.totalProfit.toFixed(2)}` : "—"}
         subtitle={best ? `${best.route} · ${best.count} trades` : "sin datos"}
-        valueClass="text-emerald-400"
+        valueClass="text-[var(--signal-up)]"
       />
       <MetricBox
         label="Latencia eval"
         value={`${latency.toFixed(2)} ms`}
         subtitle="promedio por ticker procesado"
-        valueClass="text-zinc-100"
+        valueClass="text-[var(--type-ink)]"
       />
     </div>
   );
@@ -1227,7 +1227,7 @@ function StrategyPanel({ stats }: { stats: PortfolioStats | undefined }) {
 function FintechPanel({ fintech }: { fintech: FintechMetrics | undefined }) {
   if (!fintech) {
     return (
-      <div className="glass rounded-2xl p-6 text-sm text-zinc-500">
+      <div className="glass rounded-2xl p-6 text-sm text-[var(--type-mute)]">
         Computando métricas fintech…
       </div>
     );
@@ -1236,32 +1236,32 @@ function FintechPanel({ fintech }: { fintech: FintechMetrics | undefined }) {
   // Sharpe: > 1 bueno, > 2 muy bueno, > 3 excelente
   const sharpeColor =
     fintech.sharpeRatio > 2
-      ? "text-emerald-400"
+      ? "text-[var(--signal-up)]"
       : fintech.sharpeRatio > 1
-        ? "text-emerald-400"
+        ? "text-[var(--signal-up)]"
         : fintech.sharpeRatio > 0
-          ? "text-amber-400"
-          : "text-zinc-400";
+          ? "text-[var(--beacon)]"
+          : "text-[var(--type-mute)]";
 
   // Profit factor: > 1 ganador, > 2 muy bueno, > 3 excelente
   const pfColor =
     !Number.isFinite(fintech.profitFactor) || fintech.profitFactor > 2
-      ? "text-emerald-400"
+      ? "text-[var(--signal-up)]"
       : fintech.profitFactor > 1
-        ? "text-emerald-400"
+        ? "text-[var(--signal-up)]"
         : fintech.profitFactor > 0
-          ? "text-amber-400"
-          : "text-zinc-400";
+          ? "text-[var(--beacon)]"
+          : "text-[var(--type-mute)]";
 
   // Latencia: < 1ms excelente, < 5ms bueno, > 10ms alarma
   const p99Color =
     fintech.evalLatencyP99 < 1
-      ? "text-emerald-400"
+      ? "text-[var(--signal-up)]"
       : fintech.evalLatencyP99 < 5
-        ? "text-emerald-400"
+        ? "text-[var(--signal-up)]"
         : fintech.evalLatencyP99 < 10
-          ? "text-amber-400"
-          : "text-red-400";
+          ? "text-[var(--beacon)]"
+          : "text-[var(--signal-down)]";
 
   const fmtRatio = (n: number) =>
     Number.isFinite(n) ? n.toFixed(2) : "∞";
@@ -1283,8 +1283,8 @@ function FintechPanel({ fintech }: { fintech: FintechMetrics | undefined }) {
           valueClass={
             Number.isFinite(fintech.sortinoRatio) &&
             fintech.sortinoRatio > 0
-              ? "text-emerald-400"
-              : "text-zinc-400"
+              ? "text-[var(--signal-up)]"
+              : "text-[var(--type-mute)]"
           }
         />
         <MetricBox
@@ -1299,43 +1299,43 @@ function FintechPanel({ fintech }: { fintech: FintechMetrics | undefined }) {
           subtitle="% trades con net > 0"
           valueClass={
             fintech.winRate > 0.7
-              ? "text-emerald-400"
+              ? "text-[var(--signal-up)]"
               : fintech.winRate > 0.5
-                ? "text-amber-400"
-                : "text-zinc-400"
+                ? "text-[var(--beacon)]"
+                : "text-[var(--type-mute)]"
           }
         />
       </div>
 
       {/* Latency percentiles */}
       <div className="glass rounded-2xl p-5">
-        <div className="mb-3 flex items-center gap-2 text-[10px] font-semibold uppercase tracking-[0.2em] text-emerald-400">
+        <div className="mb-3 flex items-center gap-2 text-[10px] font-semibold uppercase tracking-[0.2em] text-[var(--signal-up)]">
           <Timer className="h-3.5 w-3.5" />
           Eval latency · percentiles
         </div>
         <div className="grid grid-cols-3 gap-4">
           <div>
-            <div className="text-[10px] uppercase tracking-wide text-zinc-500">
+            <div className="text-[10px] uppercase tracking-wide text-[var(--type-mute)]">
               p50
             </div>
-            <div className="mt-1 font-mono text-xl font-semibold tabular-numbers text-zinc-100">
+            <div className="mt-1 font-mono text-xl font-semibold tabular-numbers text-[var(--type-ink)]">
               {fintech.evalLatencyP50.toFixed(3)} ms
             </div>
           </div>
           <div>
-            <div className="text-[10px] uppercase tracking-wide text-zinc-500">
+            <div className="text-[10px] uppercase tracking-wide text-[var(--type-mute)]">
               p95
             </div>
             <div
               className={`mt-1 font-mono text-xl font-semibold tabular-numbers ${
-                fintech.evalLatencyP95 < 5 ? "text-zinc-100" : "text-amber-400"
+                fintech.evalLatencyP95 < 5 ? "text-[var(--type-ink)]" : "text-[var(--beacon)]"
               }`}
             >
               {fintech.evalLatencyP95.toFixed(3)} ms
             </div>
           </div>
           <div>
-            <div className="text-[10px] uppercase tracking-wide text-zinc-500">
+            <div className="text-[10px] uppercase tracking-wide text-[var(--type-mute)]">
               p99
             </div>
             <div
@@ -1345,7 +1345,7 @@ function FintechPanel({ fintech }: { fintech: FintechMetrics | undefined }) {
             </div>
           </div>
         </div>
-        <div className="mt-2 text-[10px] text-zinc-600">
+        <div className="mt-2 text-[10px] text-[var(--type-faint)]">
           Tiempo desde llegada del tick hasta decisión completa · ring buffer de
           últimas 1000 muestras
         </div>
@@ -1353,41 +1353,41 @@ function FintechPanel({ fintech }: { fintech: FintechMetrics | undefined }) {
 
       {/* Alpha decay */}
       <div className="glass rounded-2xl p-5">
-        <div className="mb-3 flex items-center gap-2 text-[10px] font-semibold uppercase tracking-[0.2em] text-emerald-400">
+        <div className="mb-3 flex items-center gap-2 text-[10px] font-semibold uppercase tracking-[0.2em] text-[var(--signal-up)]">
           <Activity className="h-3.5 w-3.5" />
           Alpha decay · vida útil de oportunidades
         </div>
         <div className="grid grid-cols-3 gap-4">
           <div>
-            <div className="text-[10px] uppercase tracking-wide text-zinc-500">
+            <div className="text-[10px] uppercase tracking-wide text-[var(--type-mute)]">
               avg lifetime
             </div>
-            <div className="mt-1 font-mono text-xl font-semibold tabular-numbers text-zinc-100">
+            <div className="mt-1 font-mono text-xl font-semibold tabular-numbers text-[var(--type-ink)]">
               {fintech.avgOpportunityLifetimeMs > 1000
                 ? `${(fintech.avgOpportunityLifetimeMs / 1000).toFixed(2)}s`
                 : `${fintech.avgOpportunityLifetimeMs.toFixed(0)}ms`}
             </div>
           </div>
           <div>
-            <div className="text-[10px] uppercase tracking-wide text-zinc-500">
+            <div className="text-[10px] uppercase tracking-wide text-[var(--type-mute)]">
               p95 lifetime
             </div>
-            <div className="mt-1 font-mono text-xl font-semibold tabular-numbers text-zinc-100">
+            <div className="mt-1 font-mono text-xl font-semibold tabular-numbers text-[var(--type-ink)]">
               {fintech.p95OpportunityLifetimeMs > 1000
                 ? `${(fintech.p95OpportunityLifetimeMs / 1000).toFixed(2)}s`
                 : `${fintech.p95OpportunityLifetimeMs.toFixed(0)}ms`}
             </div>
           </div>
           <div>
-            <div className="text-[10px] uppercase tracking-wide text-zinc-500">
+            <div className="text-[10px] uppercase tracking-wide text-[var(--type-mute)]">
               samples
             </div>
-            <div className="mt-1 font-mono text-xl font-semibold tabular-numbers text-zinc-400">
+            <div className="mt-1 font-mono text-xl font-semibold tabular-numbers text-[var(--type-mute)]">
               {fintech.totalOpportunityDeaths.toLocaleString()}
             </div>
           </div>
         </div>
-        <div className="mt-2 text-[10px] text-zinc-600">
+        <div className="mt-2 text-[10px] text-[var(--type-faint)]">
           Tiempo entre la primera aparición rentable de una ruta y su cierre ·
           señal de eficiencia del mercado
         </div>
@@ -1437,10 +1437,10 @@ function SurvivalBadge({
 }) {
   const cls =
     bucket === "high"
-      ? "bg-emerald-500/10 text-emerald-400"
+      ? "bg-emerald-500/10 text-[var(--signal-up)]"
       : bucket === "low"
-        ? "bg-red-500/10 text-red-400"
-        : "bg-zinc-700/40 text-zinc-400";
+        ? "bg-red-500/10 text-[var(--signal-down)]"
+        : "bg-[var(--foam)]/40 text-[var(--type-mute)]";
   return (
     <span
       className={`rounded-full px-2 py-1 text-[11px] font-medium tabular-numbers ${cls}`}
@@ -1460,7 +1460,7 @@ function TobiPanel({
 }) {
   if (!tobi) {
     return (
-      <div className="glass rounded-2xl p-6 text-sm text-zinc-500">
+      <div className="glass rounded-2xl p-6 text-sm text-[var(--type-mute)]">
         Inicializando modelo TOBI…
       </div>
     );
@@ -1477,30 +1477,30 @@ function TobiPanel({
     <div className="space-y-4">
       {/* Explicación con la fórmula */}
       <div className="glass rounded-2xl p-5">
-        <div className="mb-3 flex items-center gap-2 text-[10px] font-semibold uppercase tracking-[0.2em] text-emerald-400">
+        <div className="mb-3 flex items-center gap-2 text-[10px] font-semibold uppercase tracking-[0.2em] text-[var(--signal-up)]">
           <Activity className="h-3.5 w-3.5" />
           Cómo funciona
         </div>
-        <p className="text-sm leading-relaxed text-zinc-300">
+        <p className="text-sm leading-relaxed text-[var(--type-ink)]">
           Para cada oportunidad cross-exchange, calculamos el imbalance del
           libro en ambos exchanges:
         </p>
-        <div className="mt-3 rounded-xl bg-black/40 p-4 font-mono text-xs text-zinc-300">
+        <div className="mt-3 rounded-xl bg-[var(--abyss)]/60 p-4 font-mono text-xs text-[var(--type-ink)]">
           TOBI = (bidQty − askQty) / (bidQty + askQty)
           <br />
           survivalProb = (TOBI<sub>sell</sub> − TOBI<sub>buy</sub> + 2) / 4
         </div>
-        <p className="mt-3 text-sm leading-relaxed text-zinc-400">
+        <p className="mt-3 text-sm leading-relaxed text-[var(--type-mute)]">
           Si en el exchange donde compramos hay presión vendedora, el precio va
           a bajar (mejor para nosotros). Si en el exchange donde vendemos hay
           presión compradora, el precio va a subir (mejor para nosotros). Las
           dos cosas juntas hacen que el spread <strong>crezca</strong> y la
           oportunidad <strong>viva más tiempo</strong>.
         </p>
-        <p className="mt-2 text-xs text-zinc-500">
+        <p className="mt-2 text-xs text-[var(--type-mute)]">
           El bot bloquea ejecución cuando survivalProb &lt; 0.5. Bloqueadas
           hasta ahora:{" "}
-          <span className="font-mono tabular-numbers text-zinc-300">
+          <span className="font-mono tabular-numbers text-[var(--type-ink)]">
             {skippedLowSurvival.toLocaleString()}
           </span>
         </p>
@@ -1509,20 +1509,20 @@ function TobiPanel({
       {/* Calibración por bucket */}
       <div className="glass rounded-2xl p-5">
         <div className="mb-3 flex items-center justify-between">
-          <div className="flex items-center gap-2 text-[10px] font-semibold uppercase tracking-[0.2em] text-emerald-400">
+          <div className="flex items-center gap-2 text-[10px] font-semibold uppercase tracking-[0.2em] text-[var(--signal-up)]">
             <Activity className="h-3.5 w-3.5" />
             Calibración en vivo
           </div>
           {totalDetected < 10 ? (
-            <span className="text-[10px] uppercase tracking-wide text-zinc-500">
+            <span className="text-[10px] uppercase tracking-wide text-[var(--type-mute)]">
               Acumulando muestras ({totalDetected}/10)
             </span>
           ) : isCalibrated ? (
-            <span className="rounded-full bg-emerald-500/10 px-2 py-1 text-[10px] font-medium uppercase tracking-wide text-emerald-400">
+            <span className="rounded-full bg-emerald-500/10 px-2 py-1 text-[10px] font-medium uppercase tracking-wide text-[var(--signal-up)]">
               Modelo discrimina
             </span>
           ) : (
-            <span className="rounded-full bg-amber-500/10 px-2 py-1 text-[10px] font-medium uppercase tracking-wide text-amber-400">
+            <span className="rounded-full bg-amber-500/10 px-2 py-1 text-[10px] font-medium uppercase tracking-wide text-[var(--beacon)]">
               Pendiente de validación
             </span>
           )}
@@ -1550,11 +1550,11 @@ function TobiPanel({
             hitRate={tobi.hitRateLow}
           />
         </div>
-        <p className="mt-3 text-[11px] text-zinc-500">
-          <strong className="text-zinc-400">Lectura:</strong> hit rate = % de
+        <p className="mt-3 text-[11px] text-[var(--type-mute)]">
+          <strong className="text-[var(--type-mute)]">Lectura:</strong> hit rate = % de
           oportunidades que sobrevivieron &gt; 1s antes de morir. Si el bucket
           "high" supera al "low", el modelo discrimina correctamente.{" "}
-          <span className="text-zinc-600">
+          <span className="text-[var(--type-faint)]">
             Es la prueba científica de que la señal funciona — sin papers,
             con datos en vivo.
           </span>
@@ -1579,38 +1579,38 @@ function TobiBucketCard({
 }) {
   const titleCls =
     bucket === "high"
-      ? "text-emerald-400"
+      ? "text-[var(--signal-up)]"
       : bucket === "low"
-        ? "text-red-400"
-        : "text-zinc-400";
+        ? "text-[var(--signal-down)]"
+        : "text-[var(--type-mute)]";
   const valueCls =
     detected === 0
-      ? "text-zinc-600"
+      ? "text-[var(--type-faint)]"
       : bucket === "high"
-        ? "text-emerald-400"
+        ? "text-[var(--signal-up)]"
         : bucket === "low"
-          ? "text-red-400"
-          : "text-zinc-300";
+          ? "text-[var(--signal-down)]"
+          : "text-[var(--type-ink)]";
 
   return (
-    <div className="rounded-xl bg-black/30 p-4">
+    <div className="rounded-xl bg-[var(--abyss)]/50 p-4">
       <div
         className={`text-[10px] font-semibold uppercase tracking-[0.18em] ${titleCls}`}
       >
         {bucket}
       </div>
-      <div className="mt-1 text-[10px] text-zinc-500">{label}</div>
+      <div className="mt-1 text-[10px] text-[var(--type-mute)]">{label}</div>
       <div
         className={`mt-3 font-mono text-2xl font-semibold tabular-numbers leading-none ${valueCls}`}
       >
         {detected === 0 ? "—" : `${(hitRate * 100).toFixed(0)}%`}
       </div>
-      <div className="mt-2 text-[10px] text-zinc-500">
-        <span className="font-mono tabular-numbers text-zinc-400">
+      <div className="mt-2 text-[10px] text-[var(--type-mute)]">
+        <span className="font-mono tabular-numbers text-[var(--type-mute)]">
           {survived}
         </span>
         {" / "}
-        <span className="font-mono tabular-numbers text-zinc-400">
+        <span className="font-mono tabular-numbers text-[var(--type-mute)]">
           {detected}
         </span>{" "}
         sobrevivieron &gt; 1s
@@ -1622,7 +1622,7 @@ function TobiBucketCard({
 function KellyPanel({ kelly }: { kelly: KellyMetrics | undefined }) {
   if (!kelly) {
     return (
-      <div className="glass rounded-2xl p-6 text-sm text-zinc-500">
+      <div className="glass rounded-2xl p-6 text-sm text-[var(--type-mute)]">
         Inicializando Kelly Criterion…
       </div>
     );
@@ -1641,20 +1641,20 @@ function KellyPanel({ kelly }: { kelly: KellyMetrics | undefined }) {
     <div className="space-y-4">
       {/* Cómo funciona */}
       <div className="glass rounded-2xl p-5">
-        <div className="mb-3 flex items-center gap-2 text-[10px] font-semibold uppercase tracking-[0.2em] text-emerald-400">
+        <div className="mb-3 flex items-center gap-2 text-[10px] font-semibold uppercase tracking-[0.2em] text-[var(--signal-up)]">
           <Sparkles className="h-3.5 w-3.5" />
           Cómo funciona
         </div>
-        <p className="text-sm leading-relaxed text-zinc-300">
+        <p className="text-sm leading-relaxed text-[var(--type-ink)]">
           Fórmula clásica de Kelly: dado un win rate{" "}
-          <span className="font-mono text-zinc-100">p</span> y un ratio de
-          ganancia/pérdida <span className="font-mono text-zinc-100">b</span>,
+          <span className="font-mono text-[var(--type-ink)]">p</span> y un ratio de
+          ganancia/pérdida <span className="font-mono text-[var(--type-ink)]">b</span>,
           la fracción óptima del bankroll para arriesgar es:
         </p>
-        <div className="mt-3 rounded-xl bg-black/40 p-4 font-mono text-xs text-zinc-300">
+        <div className="mt-3 rounded-xl bg-[var(--abyss)]/60 p-4 font-mono text-xs text-[var(--type-ink)]">
           f* = (p · b − q) / b{"   "}donde q = 1 − p
         </div>
-        <p className="mt-3 text-sm leading-relaxed text-zinc-400">
+        <p className="mt-3 text-sm leading-relaxed text-[var(--type-mute)]">
           Kelly completo tiene varianza brutal en la práctica. Aplicamos{" "}
           <strong>Fractional Kelly (25%)</strong> y cappeamos al{" "}
           <strong>20% del bankroll</strong> por trade. Hasta los primeros 10
@@ -1675,8 +1675,8 @@ function KellyPanel({ kelly }: { kelly: KellyMetrics | undefined }) {
           }
           valueClass={
             kelly.currentPositionSizeUSDT > 0
-              ? "text-emerald-400"
-              : "text-zinc-400"
+              ? "text-[var(--signal-up)]"
+              : "text-[var(--type-mute)]"
           }
         />
         <MetricBox
@@ -1685,10 +1685,10 @@ function KellyPanel({ kelly }: { kelly: KellyMetrics | undefined }) {
           subtitle={`f* = ${kelly.fullKelly.toFixed(3)} (raw)`}
           valueClass={
             kelly.fractionalKelly === 0
-              ? "text-red-400"
+              ? "text-[var(--signal-down)]"
               : kelly.fractionalKelly >= 0.15
-                ? "text-emerald-400"
-                : "text-zinc-300"
+                ? "text-[var(--signal-up)]"
+                : "text-[var(--type-ink)]"
           }
         />
         <MetricBox
@@ -1696,7 +1696,7 @@ function KellyPanel({ kelly }: { kelly: KellyMetrics | undefined }) {
           value={kelly.samples > 0 ? fmtPct(kelly.winProb) : "—"}
           subtitle={`${kelly.samples} trades válidos`}
           valueClass={
-            kelly.winProb > 0.5 ? "text-emerald-400" : "text-zinc-300"
+            kelly.winProb > 0.5 ? "text-[var(--signal-up)]" : "text-[var(--type-ink)]"
           }
         />
         <MetricBox
@@ -1705,14 +1705,14 @@ function KellyPanel({ kelly }: { kelly: KellyMetrics | undefined }) {
           subtitle="avg_win / |avg_loss|"
           valueClass={
             Number.isFinite(kelly.edgeRatio) && kelly.edgeRatio > 1
-              ? "text-emerald-400"
-              : "text-zinc-300"
+              ? "text-[var(--signal-up)]"
+              : "text-[var(--type-ink)]"
           }
         />
       </div>
 
       {!kelly.isReliable && (
-        <div className="rounded-xl bg-amber-500/5 px-4 py-3 text-xs text-amber-300/90">
+        <div className="rounded-xl bg-amber-500/5 px-4 py-3 text-xs text-[var(--beacon-warm)]/90">
           Modelo aún no calibrado — usando fracción default (10%) hasta
           acumular ≥ 10 trades. Esto evita decisiones agresivas sobre
           estadísticas inestables.
@@ -1729,7 +1729,7 @@ function BayesianPanel({
 }) {
   if (!bayesian) {
     return (
-      <div className="glass rounded-2xl p-6 text-sm text-zinc-500">
+      <div className="glass rounded-2xl p-6 text-sm text-[var(--type-mute)]">
         Inicializando estimador Bayesiano…
       </div>
     );
@@ -1744,13 +1744,13 @@ function BayesianPanel({
     <div className="space-y-4">
       {/* Cómo funciona */}
       <div className="glass rounded-2xl p-5">
-        <div className="mb-3 flex items-center gap-2 text-[10px] font-semibold uppercase tracking-[0.2em] text-emerald-400">
+        <div className="mb-3 flex items-center gap-2 text-[10px] font-semibold uppercase tracking-[0.2em] text-[var(--signal-up)]">
           <Telescope className="h-3.5 w-3.5" />
           Cómo funciona
         </div>
-        <p className="text-sm leading-relaxed text-zinc-300">
+        <p className="text-sm leading-relaxed text-[var(--type-ink)]">
           El detector usa hoy un estimate global de slippage de{" "}
-          <span className="font-mono text-zinc-100">
+          <span className="font-mono text-[var(--type-ink)]">
             {bayesian.staticEstimateBps} bps
           </span>{" "}
           aplicado por igual a los tres exchanges. Eso es ingenuo: cada exchange
@@ -1758,21 +1758,21 @@ function BayesianPanel({
           <strong>posterior Bayesiano por exchange</strong> que se actualiza
           después de cada trade ejecutado:
         </p>
-        <div className="mt-3 rounded-xl bg-black/40 p-4 font-mono text-xs text-zinc-300">
+        <div className="mt-3 rounded-xl bg-[var(--abyss)]/60 p-4 font-mono text-xs text-[var(--type-ink)]">
           μ<sub>post</sub> = (σ²<sub>obs</sub>·μ<sub>prior</sub> + σ²
           <sub>prior</sub>·x<sub>obs</sub>) / (σ²<sub>obs</sub> + σ²
           <sub>prior</sub>)
         </div>
-        <p className="mt-3 text-sm leading-relaxed text-zinc-400">
+        <p className="mt-3 text-sm leading-relaxed text-[var(--type-mute)]">
           A medida que el estimador acumula observaciones, el posterior
           converge al slippage <strong>real</strong> por exchange. En
           producción, este posterior alimentaría el detector reemplazando el
           estimate estático — el modelo de costos pasaría de ingenuo a
           exchange-aware.
         </p>
-        <p className="mt-2 text-xs text-zinc-500">
+        <p className="mt-2 text-xs text-[var(--type-mute)]">
           Observaciones totales acumuladas:{" "}
-          <span className="font-mono tabular-numbers text-zinc-300">
+          <span className="font-mono tabular-numbers text-[var(--type-ink)]">
             {totalSamples.toLocaleString()}
           </span>
         </p>
@@ -1800,8 +1800,8 @@ function BayesianPanel({
         />
       </div>
 
-      <p className="text-[11px] text-zinc-500">
-        <strong className="text-zinc-400">Lectura:</strong> el bot necesita
+      <p className="text-[11px] text-[var(--type-mute)]">
+        <strong className="text-[var(--type-mute)]">Lectura:</strong> el bot necesita
         acumular trades reales para converger. Si el modelo está aprendiendo,
         verás los posteriors moverse desde 5 bps (prior) hacia valores
         diferenciados por exchange. La columna "Δ vs estático" cuantifica
@@ -1829,48 +1829,48 @@ function BayesianExchangeCard({
   return (
     <div className="glass rounded-2xl p-5">
       <div className="flex items-center justify-between">
-        <div className="text-[10px] font-semibold uppercase tracking-[0.18em] text-zinc-400">
+        <div className="text-[10px] font-semibold uppercase tracking-[0.18em] text-[var(--type-mute)]">
           {label}
         </div>
         {isConverged ? (
-          <span className="rounded-full bg-emerald-500/10 px-2 py-0.5 text-[10px] font-medium text-emerald-400">
+          <span className="rounded-full bg-emerald-500/10 px-2 py-0.5 text-[10px] font-medium text-[var(--signal-up)]">
             converging
           </span>
         ) : (
-          <span className="rounded-full bg-zinc-700/40 px-2 py-0.5 text-[10px] font-medium text-zinc-500">
+          <span className="rounded-full bg-[var(--foam)]/40 px-2 py-0.5 text-[10px] font-medium text-[var(--type-mute)]">
             cold start
           </span>
         )}
       </div>
-      <div className="mt-3 font-mono text-2xl font-semibold tabular-numbers leading-none text-zinc-100">
+      <div className="mt-3 font-mono text-2xl font-semibold tabular-numbers leading-none text-[var(--type-ink)]">
         {posterior.mean.toFixed(2)}
-        <span className="ml-1 text-sm text-zinc-500">bps</span>
+        <span className="ml-1 text-sm text-[var(--type-mute)]">bps</span>
       </div>
-      <div className="mt-2 text-[10px] text-zinc-500">
+      <div className="mt-2 text-[10px] text-[var(--type-mute)]">
         posterior mean · σ ={" "}
-        <span className="font-mono tabular-numbers text-zinc-400">
+        <span className="font-mono tabular-numbers text-[var(--type-mute)]">
           {stddev.toFixed(2)}
         </span>
       </div>
-      <div className="mt-3 flex items-center justify-between border-t border-white/[0.05] pt-3">
-        <span className="text-[10px] uppercase tracking-wide text-zinc-500">
+      <div className="mt-3 flex items-center justify-between border-t border-[var(--foam)] pt-3">
+        <span className="text-[10px] uppercase tracking-wide text-[var(--type-mute)]">
           samples
         </span>
-        <span className="font-mono tabular-numbers text-xs text-zinc-300">
+        <span className="font-mono tabular-numbers text-xs text-[var(--type-ink)]">
           {posterior.samples.toLocaleString()}
         </span>
       </div>
       <div className="mt-1 flex items-center justify-between">
-        <span className="text-[10px] uppercase tracking-wide text-zinc-500">
+        <span className="text-[10px] uppercase tracking-wide text-[var(--type-mute)]">
           Δ vs estático
         </span>
         <span
           className={`font-mono tabular-numbers text-xs ${
             Math.abs(delta) < 0.5
-              ? "text-zinc-400"
+              ? "text-[var(--type-mute)]"
               : delta > 0
-                ? "text-amber-400"
-                : "text-emerald-400"
+                ? "text-[var(--beacon)]"
+                : "text-[var(--signal-up)]"
           }`}
         >
           {posterior.samples === 0
@@ -1885,7 +1885,7 @@ function BayesianExchangeCard({
 function DecisionsPanel({ counters }: { counters: ScanCounters | undefined }) {
   if (!counters) {
     return (
-      <div className="glass rounded-2xl p-6 text-sm text-zinc-500">
+      <div className="glass rounded-2xl p-6 text-sm text-[var(--type-mute)]">
         —
       </div>
     );
@@ -1902,39 +1902,39 @@ function DecisionsPanel({ counters }: { counters: ScanCounters | undefined }) {
       <SkipBox
         label="Cooldown"
         value={counters.skippedCooldown}
-        color="text-amber-400"
+        color="text-[var(--beacon)]"
         subtitle="throttle 3s por par"
       />
       <SkipBox
         label="Bajo TOBI"
         value={counters.skippedLowSurvival}
-        color="text-sky-400"
+        color="text-[var(--beacon-warm)]"
         subtitle="señal predice muerte"
       />
       <SkipBox
         label="Sospechosa"
         value={counters.skippedSuspicious}
-        color="text-red-400"
+        color="text-[var(--signal-down)]"
         subtitle="spread > 2% (breaker)"
       />
       <SkipBox
         label="Data vieja"
         value={counters.skippedStaleData}
-        color="text-zinc-400"
+        color="text-[var(--type-mute)]"
         subtitle="ticker > 60s viejo"
       />
       <SkipBox
         label="Sin capital"
         value={counters.skippedInsufficientCapital}
-        color="text-zinc-400"
+        color="text-[var(--type-mute)]"
         subtitle="wallet agotado"
       />
       <div className="col-span-2 glass rounded-2xl p-4 lg:col-span-5">
         <div className="flex items-baseline justify-between">
-          <div className="text-xs uppercase tracking-wide text-zinc-500">
+          <div className="text-xs uppercase tracking-wide text-[var(--type-mute)]">
             Total de rentables descartadas
           </div>
-          <div className="font-mono text-xs text-zinc-400 tabular-numbers">
+          <div className="font-mono text-xs text-[var(--type-mute)] tabular-numbers">
             {totalSkipped.toLocaleString()} decisiones
           </div>
         </div>
@@ -1946,7 +1946,7 @@ function DecisionsPanel({ counters }: { counters: ScanCounters | undefined }) {
 function RiskPanel({ risk }: { risk: RiskMetrics | undefined }) {
   if (!risk) {
     return (
-      <div className="glass rounded-2xl p-6 text-sm text-zinc-500">
+      <div className="glass rounded-2xl p-6 text-sm text-[var(--type-mute)]">
         Inicializando métricas de riesgo…
       </div>
     );
@@ -1958,53 +1958,53 @@ function RiskPanel({ risk }: { risk: RiskMetrics | undefined }) {
           label="Drawdown máximo"
           value={`$${risk.maxDrawdownUSD.toFixed(2)}`}
           subtitle={`${(risk.maxDrawdownPercent * 100).toFixed(1)}% desde el peak`}
-          valueClass={risk.maxDrawdownUSD > 0 ? "text-red-400" : "text-emerald-400"}
+          valueClass={risk.maxDrawdownUSD > 0 ? "text-[var(--signal-down)]" : "text-[var(--signal-up)]"}
         />
         <MetricBox
           label="Desbalance de wallet"
           value={`${(risk.walletImbalance * 100).toFixed(1)}%`}
           subtitle="desv std / media de USD/exchange"
-          valueClass={risk.walletImbalance > 0.2 ? "text-amber-400" : "text-emerald-400"}
+          valueClass={risk.walletImbalance > 0.2 ? "text-[var(--beacon)]" : "text-[var(--signal-up)]"}
         />
         <MetricBox
           label="Capital desplegado"
           value={`${(risk.capitalDeployedPercent * 100).toFixed(1)}%`}
           subtitle="vol trade / USDT inicial"
-          valueClass="text-zinc-100"
+          valueClass="text-[var(--type-ink)]"
         />
         <MetricBox
           label="Circuit breaker"
           value="ACTIVO"
           subtitle="rechaza spreads > 2%"
-          valueClass="text-emerald-400"
+          valueClass="text-[var(--signal-up)]"
         />
       </div>
       <div className="glass rounded-2xl p-4">
-        <div className="mb-3 text-xs uppercase tracking-wide text-zinc-500">
+        <div className="mb-3 text-xs uppercase tracking-wide text-[var(--type-mute)]">
           Exposición por exchange
         </div>
         <div className="space-y-2">
           {risk.exposureByExchange.map((e) => (
             <div key={e.exchange} className="flex items-center gap-3">
-              <span className="w-24 text-xs uppercase text-zinc-400">
+              <span className="w-24 text-xs uppercase text-[var(--type-mute)]">
                 {EXCHANGE_LABEL[e.exchange]}
               </span>
-              <div className="flex-1 overflow-hidden rounded-full bg-zinc-800">
+              <div className="flex-1 overflow-hidden rounded-full bg-[var(--tide)]">
                 <div
                   className="h-2 bg-emerald-500/70"
                   style={{ width: `${e.pctOfPortfolio * 100}%` }}
                 />
               </div>
-              <span className="w-20 text-right font-mono text-xs tabular-numbers text-zinc-300">
+              <span className="w-20 text-right font-mono text-xs tabular-numbers text-[var(--type-ink)]">
                 {(e.pctOfPortfolio * 100).toFixed(1)}%
               </span>
-              <span className="w-28 text-right font-mono text-xs tabular-numbers text-zinc-500">
+              <span className="w-28 text-right font-mono text-xs tabular-numbers text-[var(--type-mute)]">
                 $
                 {e.usdValue.toLocaleString("en-US", {
                   maximumFractionDigits: 0,
                 })}
               </span>
-              <span className="w-28 text-right font-mono text-[10px] tabular-numbers text-zinc-600">
+              <span className="w-28 text-right font-mono text-[10px] tabular-numbers text-[var(--type-faint)]">
                 {(e.usdtPct * 100).toFixed(0)}% en USDT
               </span>
             </div>
@@ -2022,7 +2022,7 @@ function DecisionsFeed({ decisions }: { decisions: Decision[] }) {
   return (
     <div className="space-y-3">
       <div className="glass rounded-2xl px-5 py-3 text-xs">
-        <span className="text-zinc-400">
+        <span className="text-[var(--type-mute)]">
           {newestAgeSec === null
             ? "Esperando primera decisión rentable…"
             : newestAgeSec < 60
@@ -2031,7 +2031,7 @@ function DecisionsFeed({ decisions }: { decisions: Decision[] }) {
         </span>
       </div>
       {decisions.length === 0 ? (
-        <div className="glass rounded-2xl p-6 text-center text-sm text-zinc-500">
+        <div className="glass rounded-2xl p-6 text-center text-sm text-[var(--type-mute)]">
           Las decisiones van a aparecer acá a medida que el bot evalúe oportunidades rentables…
         </div>
       ) : (
@@ -2050,7 +2050,7 @@ function DecisionsFeed({ decisions }: { decisions: Decision[] }) {
                   key={i}
                   className="flex items-center gap-3 px-4 py-2 font-mono text-xs"
                 >
-                  <span className="w-16 text-right text-zinc-600 tabular-numbers">
+                  <span className="w-16 text-right text-[var(--type-faint)] tabular-numbers">
                     hace {ageLabel}
                   </span>
                   <span
@@ -2061,13 +2061,13 @@ function DecisionsFeed({ decisions }: { decisions: Decision[] }) {
                   <span className={`w-8 ${PAIR_ACCENT[d.pair]}`}>
                     {d.pair.split("/")[0]}
                   </span>
-                  <span className="w-32 text-zinc-300">{d.route}</span>
+                  <span className="w-32 text-[var(--type-ink)]">{d.route}</span>
                   <span
-                    className={`w-20 text-right tabular-numbers ${d.outcome === "executed" ? "text-emerald-400" : "text-zinc-500"}`}
+                    className={`w-20 text-right tabular-numbers ${d.outcome === "executed" ? "text-[var(--signal-up)]" : "text-[var(--type-mute)]"}`}
                   >
                     {d.netProfit >= 0 ? "+" : ""}${d.netProfit.toFixed(3)}
                   </span>
-                  <span className="flex-1 truncate text-zinc-500">
+                  <span className="flex-1 truncate text-[var(--type-mute)]">
                     {d.reason}
                   </span>
                 </div>
@@ -2083,7 +2083,7 @@ function DecisionsFeed({ decisions }: { decisions: Decision[] }) {
 function CostBreakdown({ stats }: { stats: PortfolioStats | undefined }) {
   if (!stats || stats.totalTrades === 0) {
     return (
-      <div className="glass rounded-2xl p-6 text-sm text-zinc-500">
+      <div className="glass rounded-2xl p-6 text-sm text-[var(--type-mute)]">
         Cost breakdown appears after the first executed trade.
       </div>
     );
@@ -2093,31 +2093,31 @@ function CostBreakdown({ stats }: { stats: PortfolioStats | undefined }) {
       <CostBox
         label="Fees de trading"
         value={stats.totalTradingFees}
-        color="text-red-400"
+        color="text-[var(--signal-down)]"
         sub="taker × 2 lados"
       />
       <CostBox
         label="Retiro (amortizado)"
         value={stats.totalAmortizedWithdrawal}
-        color="text-amber-400"
+        color="text-[var(--beacon)]"
         sub="÷ 100 trades/rebalance"
       />
       <CostBox
         label="Slippage estimado"
         value={stats.totalEstimatedSlippage}
-        color="text-amber-400"
+        color="text-[var(--beacon)]"
         sub="0.002% × valor del trade"
       />
       <CostBox
         label="Costo de latencia"
         value={stats.totalLatencyCost}
-        color="text-amber-400"
+        color="text-[var(--beacon)]"
         sub="0.001% × valor del trade"
       />
       <CostBox
         label="Costo total all-in"
         value={stats.totalCosts}
-        color="text-zinc-100"
+        color="text-[var(--type-ink)]"
         sub="lo que sobrevive = NETO"
       />
     </div>
@@ -2202,13 +2202,13 @@ function ExchangeCard({
   const isStale = ticker?.stale ?? false;
   return (
     <Card
-      className={`glass !rounded-2xl text-zinc-50 ${isStale ? "opacity-50" : ""}`}
+      className={`glass !rounded-2xl text-[var(--type-ink)] ${isStale ? "opacity-50" : ""}`}
     >
       <CardHeader className="pb-2">
-        <CardTitle className="flex items-center justify-between text-sm font-medium uppercase tracking-wide text-zinc-400">
+        <CardTitle className="flex items-center justify-between text-sm font-medium uppercase tracking-wide text-[var(--type-mute)]">
           <span>{EXCHANGE_LABEL[exchange]}</span>
           {isStale ? (
-            <span className="rounded-full bg-amber-500/10 px-2 py-0.5 text-xs font-medium normal-case text-amber-400">
+            <span className="rounded-full bg-amber-500/10 px-2 py-0.5 text-xs font-medium normal-case text-[var(--beacon)]">
               data vieja · {ticker ? `hace ${(ticker.ageMs / 1000).toFixed(0)}s` : ""}
             </span>
           ) : (
@@ -2224,14 +2224,14 @@ function ExchangeCard({
         <PriceRow
           label="bid"
           value={ticker?.bid}
-          colorOnFresh={isStale ? "text-zinc-500" : "text-emerald-400"}
+          colorOnFresh={isStale ? "text-[var(--type-mute)]" : "text-[var(--signal-up)]"}
         />
         <PriceRow
           label="ask"
           value={ticker?.ask}
-          colorOnFresh={isStale ? "text-zinc-500" : "text-red-400"}
+          colorOnFresh={isStale ? "text-[var(--type-mute)]" : "text-[var(--signal-down)]"}
         />
-        <div className="flex flex-wrap justify-between gap-2 pt-2 text-xs text-zinc-500">
+        <div className="flex flex-wrap justify-between gap-2 pt-2 text-xs text-[var(--type-mute)]">
           <span>
             spread{" "}
             {ticker ? `$${(ticker.ask - ticker.bid).toFixed(2)}` : "—"}
@@ -2239,7 +2239,7 @@ function ExchangeCard({
           {exchangeStats ? (
             <span className="flex items-center gap-2">
               <span title="Tasa de mensajes WebSocket">
-                <span className="text-zinc-300">
+                <span className="text-[var(--type-ink)]">
                   {exchangeStats.ticksPerSecond.toFixed(1)}
                 </span>{" "}
                 msg/s
@@ -2247,9 +2247,9 @@ function ExchangeCard({
               {exchangeStats.networkLatencyMs > 0 ? (
                 <span
                   title="RTT real medido vía REST ping cada 30s"
-                  className="border-l border-zinc-700 pl-2"
+                  className="border-l border-[var(--foam)] pl-2"
                 >
-                  <span className="text-zinc-300">
+                  <span className="text-[var(--type-ink)]">
                     {exchangeStats.networkLatencyMs.toFixed(0)}
                   </span>{" "}
                   ms RTT
@@ -2274,9 +2274,9 @@ function PriceRow({
 }) {
   return (
     <div className="flex items-baseline justify-between">
-      <span className="text-xs uppercase text-zinc-500">{label}</span>
+      <span className="text-xs uppercase text-[var(--type-mute)]">{label}</span>
       <span
-        className={`text-xl font-semibold ${value ? colorOnFresh : "text-zinc-600"} lg:text-2xl`}
+        className={`text-xl font-semibold ${value ? colorOnFresh : "text-[var(--type-faint)]"} lg:text-2xl`}
       >
         {value
           ? `$${value.toLocaleString("en-US", {
@@ -2304,11 +2304,11 @@ function WalletCard({
     ? wallet.usdt + wallet.btc * btcPrice + wallet.eth * ethPrice
     : 0;
   return (
-    <Card className="glass !rounded-2xl text-zinc-50">
+    <Card className="glass !rounded-2xl text-[var(--type-ink)]">
       <CardHeader className="pb-2">
-        <CardTitle className="flex items-center justify-between text-sm font-medium uppercase tracking-wide text-zinc-400">
+        <CardTitle className="flex items-center justify-between text-sm font-medium uppercase tracking-wide text-[var(--type-mute)]">
           <span>{EXCHANGE_LABEL[exchange]}</span>
-          <span className="font-mono text-xs tabular-numbers text-zinc-500 normal-case">
+          <span className="font-mono text-xs tabular-numbers text-[var(--type-mute)] normal-case">
             ≈ $
             {totalUsd.toLocaleString("en-US", { maximumFractionDigits: 0 })}
           </span>
@@ -2318,19 +2318,19 @@ function WalletCard({
         <BalanceRow
           label="USDT"
           value={wallet?.usdt}
-          color="text-zinc-100"
+          color="text-[var(--type-ink)]"
           decimals={2}
         />
         <BalanceRow
           label="BTC"
           value={wallet?.btc}
-          color="text-amber-400"
+          color="text-[var(--beacon)]"
           decimals={6}
         />
         <BalanceRow
           label="ETH"
           value={wallet?.eth}
-          color="text-violet-400"
+          color="text-[var(--beacon-warm)]"
           decimals={4}
         />
       </CardContent>
@@ -2351,7 +2351,7 @@ function BalanceRow({
 }) {
   return (
     <div className="flex items-baseline justify-between">
-      <span className="text-xs uppercase text-zinc-500">{label}</span>
+      <span className="text-xs uppercase text-[var(--type-mute)]">{label}</span>
       <span className={`text-lg font-semibold ${color}`}>
         {value !== undefined
           ? value.toLocaleString("en-US", {
@@ -2409,7 +2409,7 @@ function EquityCurve({
 
   if (data.length === 0) {
     return (
-      <div className="glass rounded-2xl p-8 text-center text-sm text-zinc-500">
+      <div className="glass rounded-2xl p-8 text-center text-sm text-[var(--type-mute)]">
         La curva de equity aparecerá cuando alguno de los bots ejecute su
         primer trade.
       </div>
@@ -2426,24 +2426,24 @@ function EquityCurve({
         <div className="flex items-center gap-5 text-xs">
           <div className="flex items-center gap-2">
             <span className="inline-block h-2 w-4 rounded bg-emerald-400" />
-            <span className="text-zinc-300 font-medium">Faro</span>
+            <span className="text-[var(--type-ink)] font-medium">Faro</span>
             <span
-              className={`font-mono tabular-numbers ${finalFaro >= 0 ? "text-emerald-400" : "text-red-400"}`}
+              className={`font-mono tabular-numbers ${finalFaro >= 0 ? "text-[var(--signal-up)]" : "text-[var(--signal-down)]"}`}
             >
               {finalFaro >= 0 ? "+" : ""}${finalFaro.toFixed(2)}
             </span>
           </div>
           <div className="flex items-center gap-2">
             <span className="inline-block h-2 w-4 rounded bg-red-400" />
-            <span className="text-zinc-300 font-medium">Naive</span>
+            <span className="text-[var(--type-ink)] font-medium">Naive</span>
             <span
-              className={`font-mono tabular-numbers ${finalNaive >= 0 ? "text-emerald-400" : "text-red-400"}`}
+              className={`font-mono tabular-numbers ${finalNaive >= 0 ? "text-[var(--signal-up)]" : "text-[var(--signal-down)]"}`}
             >
               {finalNaive >= 0 ? "+" : ""}${finalNaive.toFixed(2)}
             </span>
           </div>
         </div>
-        <div className="font-mono text-sm tabular-numbers text-emerald-300">
+        <div className="font-mono text-sm tabular-numbers text-[var(--signal-up)]">
           gap +${gap.toFixed(2)}
         </div>
       </div>
@@ -2511,7 +2511,7 @@ function NaiveComparison({
 }) {
   if (!faro || !naive) {
     return (
-      <div className="glass rounded-2xl p-6 text-sm text-zinc-500">
+      <div className="glass rounded-2xl p-6 text-sm text-[var(--type-mute)]">
         Inicializando comparativa…
       </div>
     );
@@ -2521,44 +2521,44 @@ function NaiveComparison({
   return (
     <div className="grid grid-cols-1 gap-4 md:grid-cols-3">
       <div className="glass rounded-2xl p-5">
-        <div className="flex items-center gap-2 text-[10px] font-semibold uppercase tracking-[0.2em] text-emerald-400">
+        <div className="flex items-center gap-2 text-[10px] font-semibold uppercase tracking-[0.2em] text-[var(--signal-up)]">
           <Sparkles className="h-3.5 w-3.5" />
           Faro (institucional)
         </div>
         <div
-          className={`mt-2.5 font-mono text-3xl font-semibold tabular-numbers ${faroNet >= 0 ? "text-emerald-400" : "text-red-400"}`}
+          className={`mt-2.5 font-mono text-3xl font-semibold tabular-numbers ${faroNet >= 0 ? "text-[var(--signal-up)]" : "text-[var(--signal-down)]"}`}
         >
           {faroNet >= 0 ? "+" : ""}${faroNet.toFixed(2)}
         </div>
-        <div className="mt-2 text-xs text-zinc-500">
+        <div className="mt-2 text-xs text-[var(--type-mute)]">
           {faro.totalTrades} trades · filtro por NET tras 4-stack cost model
         </div>
       </div>
 
       <div className="glass rounded-2xl p-5">
-        <div className="flex items-center gap-2 text-[10px] font-semibold uppercase tracking-[0.2em] text-red-400">
+        <div className="flex items-center gap-2 text-[10px] font-semibold uppercase tracking-[0.2em] text-[var(--signal-down)]">
           <Skull className="h-3.5 w-3.5" />
           Naive (retail 0.5%)
         </div>
         <div
-          className={`mt-2.5 font-mono text-3xl font-semibold tabular-numbers ${naive.cumulativeNet >= 0 ? "text-emerald-400" : "text-red-400"}`}
+          className={`mt-2.5 font-mono text-3xl font-semibold tabular-numbers ${naive.cumulativeNet >= 0 ? "text-[var(--signal-up)]" : "text-[var(--signal-down)]"}`}
         >
           {naive.cumulativeNet >= 0 ? "+" : ""}${naive.cumulativeNet.toFixed(2)}
         </div>
-        <div className="mt-2 text-xs text-zinc-500">
+        <div className="mt-2 text-xs text-[var(--type-mute)]">
           {naive.totalTrades} trades · filtro solo por GROSS positivo
         </div>
       </div>
 
       <div className="rounded-2xl border border-emerald-400/30 bg-gradient-to-br from-emerald-400/10 to-transparent p-5 backdrop-blur-xl">
-        <div className="flex items-center gap-2 text-[10px] font-semibold uppercase tracking-[0.2em] text-emerald-300">
+        <div className="flex items-center gap-2 text-[10px] font-semibold uppercase tracking-[0.2em] text-[var(--signal-up)]">
           <Swords className="h-3.5 w-3.5" />
           Ventaja Faro
         </div>
-        <div className="mt-2.5 font-mono text-3xl font-semibold tabular-numbers text-emerald-300">
+        <div className="mt-2.5 font-mono text-3xl font-semibold tabular-numbers text-[var(--signal-up)]">
           {advantage >= 0 ? "+" : ""}${advantage.toFixed(2)}
         </div>
-        <div className="mt-2 text-xs text-emerald-200/70">
+        <div className="mt-2 text-xs text-[var(--signal-up)]/70">
           Diferencia neta sobre el bot retail · mismos datos, mismos exchanges
         </div>
       </div>
@@ -2569,7 +2569,7 @@ function NaiveComparison({
 function TradesTable({ trades }: { trades: ExecutedTrade[] }) {
   if (trades.length === 0) {
     return (
-      <div className="glass rounded-2xl p-8 text-center text-sm text-zinc-500">
+      <div className="glass rounded-2xl p-8 text-center text-sm text-[var(--type-mute)]">
         Aún no se ejecutan trades. Faro observa — solo ejecuta oportunidades
         rentables DESPUÉS de fees. La mayoría son espejismos.
       </div>
@@ -2579,7 +2579,7 @@ function TradesTable({ trades }: { trades: ExecutedTrade[] }) {
   return (
     <div className="overflow-x-auto glass rounded-2xl">
       <table className="w-full text-sm">
-        <thead className="bg-white/[0.02] text-[10px] font-semibold uppercase tracking-[0.18em] text-zinc-500">
+        <thead className="bg-[var(--abyss)]/40 text-[10px] font-semibold uppercase tracking-[0.18em] text-[var(--type-mute)]">
           <tr>
             <th className="px-4 py-3 text-left font-medium">Hora</th>
             <th className="px-4 py-3 text-left font-medium">Par</th>
@@ -2600,39 +2600,39 @@ function TradesTable({ trades }: { trades: ExecutedTrade[] }) {
             const asset = t.pair.split("/")[0];
             const costTooltip = `trading $${t.tradingFees.toFixed(3)} · withdrawal $${t.amortizedWithdrawal.toFixed(3)} · slippage $${t.estimatedSlippage.toFixed(3)} · latency $${t.latencyCost.toFixed(3)}`;
             return (
-              <tr key={t.id} className="border-t border-white/[0.04]">
-                <td className="px-4 py-2 text-zinc-500">
+              <tr key={t.id} className="border-t border-[var(--foam)]">
+                <td className="px-4 py-2 text-[var(--type-mute)]">
                   {new Date(t.timestamp).toLocaleTimeString("en-US", {
                     hour12: false,
                   })}
                 </td>
                 <td className={`px-4 py-2 ${PAIR_ACCENT[t.pair]}`}>{asset}</td>
-                <td className="px-4 py-2 text-zinc-300">
+                <td className="px-4 py-2 text-[var(--type-ink)]">
                   {t.buyExchange} → {t.sellExchange}
                   {t.partial ? (
-                    <span className="ml-2 rounded-full bg-amber-500/10 px-2 py-0.5 text-xs text-amber-400">
+                    <span className="ml-2 rounded-full bg-amber-500/10 px-2 py-0.5 text-xs text-[var(--beacon)]">
                       partial
                     </span>
                   ) : null}
                 </td>
-                <td className="px-4 py-2 text-right text-zinc-400">
+                <td className="px-4 py-2 text-right text-[var(--type-mute)]">
                   {t.executedVolume.toFixed(6)}
                 </td>
-                <td className="px-4 py-2 text-right text-zinc-400">
+                <td className="px-4 py-2 text-right text-[var(--type-mute)]">
                   ${t.grossProfit.toFixed(2)}
                 </td>
                 <td
-                  className="cursor-help px-4 py-2 text-right text-zinc-500 underline decoration-dotted underline-offset-2"
+                  className="cursor-help px-4 py-2 text-right text-[var(--type-mute)] underline decoration-dotted underline-offset-2"
                   title={costTooltip}
                 >
                   ${t.totalCosts.toFixed(2)}
                 </td>
-                <td className="px-4 py-2 text-right font-semibold text-emerald-400">
+                <td className="px-4 py-2 text-right font-semibold text-[var(--signal-up)]">
                   +${t.netProfit.toFixed(2)}
                 </td>
                 <td
                   className={`px-4 py-2 text-right font-semibold ${
-                    t.retailNetProfit < 0 ? "text-red-400" : "text-zinc-400"
+                    t.retailNetProfit < 0 ? "text-[var(--signal-down)]" : "text-[var(--type-mute)]"
                   }`}
                 >
                   {t.retailNetProfit >= 0 ? "+" : ""}$
@@ -2650,7 +2650,7 @@ function TradesTable({ trades }: { trades: ExecutedTrade[] }) {
 function OpportunitiesTable({ opps }: { opps: Opportunity[] }) {
   if (opps.length === 0) {
     return (
-      <div className="glass rounded-2xl p-6 text-center text-xs text-zinc-500">
+      <div className="glass rounded-2xl p-6 text-center text-xs text-[var(--type-mute)]">
         Esperando oportunidades en este par…
       </div>
     );
@@ -2659,7 +2659,7 @@ function OpportunitiesTable({ opps }: { opps: Opportunity[] }) {
   return (
     <div className="overflow-x-auto glass rounded-2xl">
       <table className="w-full text-sm">
-        <thead className="bg-white/[0.02] text-[10px] font-semibold uppercase tracking-[0.18em] text-zinc-500">
+        <thead className="bg-[var(--abyss)]/40 text-[10px] font-semibold uppercase tracking-[0.18em] text-[var(--type-mute)]">
           <tr>
             <th className="px-4 py-3 text-left font-medium">Hora</th>
             <th className="px-4 py-3 text-left font-medium">Ruta</th>
@@ -2672,25 +2672,25 @@ function OpportunitiesTable({ opps }: { opps: Opportunity[] }) {
         </thead>
         <tbody className="font-mono tabular-numbers">
           {opps.slice(0, 8).map((o, i) => (
-            <tr key={i} className="border-t border-white/[0.04]">
-              <td className="px-4 py-2 text-zinc-500">
+            <tr key={i} className="border-t border-[var(--foam)]">
+              <td className="px-4 py-2 text-[var(--type-mute)]">
                 {new Date(o.timestamp).toLocaleTimeString("en-US", {
                   hour12: false,
                 })}
               </td>
-              <td className="px-4 py-2 text-zinc-300">
+              <td className="px-4 py-2 text-[var(--type-ink)]">
                 {o.buyExchange} → {o.sellExchange}
               </td>
-              <td className="px-4 py-2 text-right text-zinc-400">
+              <td className="px-4 py-2 text-right text-[var(--type-mute)]">
                 ${o.grossProfit.toFixed(2)}
               </td>
               <td
-                className={`px-4 py-2 text-right font-semibold ${o.profitable ? "text-emerald-400" : "text-red-400"}`}
+                className={`px-4 py-2 text-right font-semibold ${o.profitable ? "text-[var(--signal-up)]" : "text-[var(--signal-down)]"}`}
               >
                 {o.netProfit >= 0 ? "+" : ""}${o.netProfit.toFixed(2)}
               </td>
               <td
-                className={`px-4 py-2 text-right ${o.retailNetProfit < 0 ? "text-red-400" : "text-zinc-400"}`}
+                className={`px-4 py-2 text-right ${o.retailNetProfit < 0 ? "text-[var(--signal-down)]" : "text-[var(--type-mute)]"}`}
               >
                 {o.retailNetProfit >= 0 ? "+" : ""}$
                 {o.retailNetProfit.toFixed(2)}
@@ -2700,15 +2700,15 @@ function OpportunitiesTable({ opps }: { opps: Opportunity[] }) {
               </td>
               <td className="px-4 py-2 text-right">
                 {o.suspicious ? (
-                  <span className="rounded-full bg-amber-500/10 px-2 py-1 text-xs font-medium text-amber-400">
+                  <span className="rounded-full bg-amber-500/10 px-2 py-1 text-xs font-medium text-[var(--beacon)]">
                     SOSPECHOSA
                   </span>
                 ) : o.profitable ? (
-                  <span className="rounded-full bg-emerald-500/10 px-2 py-1 text-xs font-medium text-emerald-400">
+                  <span className="rounded-full bg-emerald-500/10 px-2 py-1 text-xs font-medium text-[var(--signal-up)]">
                     RENTABLE
                   </span>
                 ) : (
-                  <span className="rounded-full bg-zinc-800 px-2 py-1 text-xs font-medium text-zinc-500">
+                  <span className="rounded-full bg-[var(--tide)] px-2 py-1 text-xs font-medium text-[var(--type-mute)]">
                     DESCARTADA
                   </span>
                 )}
@@ -2739,19 +2739,19 @@ function TriangularPanel({
           label="Ciclos triangulares evaluados"
           value={scanned.toString()}
           subtitle="últimos 12 evaluados"
-          valueClass="text-zinc-100"
+          valueClass="text-[var(--type-ink)]"
         />
         <MetricBox
           label="Rentables detectadas"
           value={profitable.toString()}
           subtitle={`${scanned > 0 ? ((profitable / scanned) * 100).toFixed(0) : 0}% hit rate`}
-          valueClass={profitable > 0 ? "text-emerald-400" : "text-zinc-400"}
+          valueClass={profitable > 0 ? "text-[var(--signal-up)]" : "text-[var(--type-mute)]"}
         />
         <MetricBox
           label="Trades triangulares ejecutados"
           value={trades.length.toString()}
           subtitle="dentro de un solo exchange"
-          valueClass={trades.length > 0 ? "text-emerald-400" : "text-zinc-400"}
+          valueClass={trades.length > 0 ? "text-[var(--signal-up)]" : "text-[var(--type-mute)]"}
         />
         <MetricBox
           label="P&L triangular"
@@ -2759,23 +2759,23 @@ function TriangularPanel({
           subtitle={`sobre $1,000 notional/ciclo`}
           valueClass={
             triProfit > 0
-              ? "text-emerald-400"
+              ? "text-[var(--signal-up)]"
               : triProfit < 0
-                ? "text-red-400"
-                : "text-zinc-400"
+                ? "text-[var(--signal-down)]"
+                : "text-[var(--type-mute)]"
           }
         />
       </div>
 
       {opps.length === 0 ? (
-        <div className="glass rounded-2xl p-6 text-center text-sm text-zinc-500">
+        <div className="glass rounded-2xl p-6 text-center text-sm text-[var(--type-mute)]">
           Esperando los 3 pares (BTC/USDT + ETH/USDT + ETH/BTC) en al menos
           un exchange…
         </div>
       ) : (
         <div className="overflow-x-auto glass rounded-2xl">
           <table className="w-full text-sm">
-            <thead className="bg-white/[0.02] text-[10px] font-semibold uppercase tracking-[0.18em] text-zinc-500">
+            <thead className="bg-[var(--abyss)]/40 text-[10px] font-semibold uppercase tracking-[0.18em] text-[var(--type-mute)]">
               <tr>
                 <th className="px-4 py-3 text-left font-medium">Hora</th>
                 <th className="px-4 py-3 text-left font-medium">Exchange</th>
@@ -2789,43 +2789,43 @@ function TriangularPanel({
             </thead>
             <tbody className="font-mono tabular-numbers">
               {opps.slice(0, 12).map((o, i) => (
-                <tr key={i} className="border-t border-white/[0.04]">
-                  <td className="px-4 py-2 text-zinc-500">
+                <tr key={i} className="border-t border-[var(--foam)]">
+                  <td className="px-4 py-2 text-[var(--type-mute)]">
                     {new Date(o.timestamp).toLocaleTimeString("en-US", {
                       hour12: false,
                     })}
                   </td>
-                  <td className="px-4 py-2 text-zinc-300">
+                  <td className="px-4 py-2 text-[var(--type-ink)]">
                     {EXCHANGE_LABEL[o.exchange]}
                   </td>
-                  <td className="px-4 py-2 text-zinc-300">{o.direction}</td>
-                  <td className="px-4 py-2 text-right text-zinc-500">
+                  <td className="px-4 py-2 text-[var(--type-ink)]">{o.direction}</td>
+                  <td className="px-4 py-2 text-right text-[var(--type-mute)]">
                     ${o.startUSDT.toFixed(2)}
                   </td>
-                  <td className="px-4 py-2 text-right text-zinc-400">
+                  <td className="px-4 py-2 text-right text-[var(--type-mute)]">
                     ${o.finalUSDT.toFixed(2)}
                   </td>
                   <td
                     className={`px-4 py-2 text-right font-semibold ${
-                      o.profitable ? "text-emerald-400" : "text-red-400"
+                      o.profitable ? "text-[var(--signal-up)]" : "text-[var(--signal-down)]"
                     }`}
                   >
                     {o.netProfit >= 0 ? "+" : ""}${o.netProfit.toFixed(4)}
                   </td>
                   <td
                     className={`px-4 py-2 text-right ${
-                      o.profitable ? "text-emerald-400" : "text-red-400"
+                      o.profitable ? "text-[var(--signal-up)]" : "text-[var(--signal-down)]"
                     }`}
                   >
                     {(o.netPercent * 100).toFixed(4)}%
                   </td>
                   <td className="px-4 py-2 text-right">
                     {o.profitable ? (
-                      <span className="rounded-full bg-emerald-500/10 px-2 py-1 text-xs font-medium text-emerald-400">
+                      <span className="rounded-full bg-emerald-500/10 px-2 py-1 text-xs font-medium text-[var(--signal-up)]">
                         RENTABLE
                       </span>
                     ) : (
-                      <span className="rounded-full bg-zinc-800 px-2 py-1 text-xs font-medium text-zinc-500">
+                      <span className="rounded-full bg-[var(--tide)] px-2 py-1 text-xs font-medium text-[var(--type-mute)]">
                         DESCARTADA
                       </span>
                     )}
@@ -2839,11 +2839,11 @@ function TriangularPanel({
 
       {trades.length > 0 ? (
         <div className="overflow-x-auto rounded-2xl border border-emerald-400/20 bg-emerald-400/[0.03]">
-          <div className="px-4 py-2 text-xs font-medium uppercase tracking-wide text-emerald-400">
+          <div className="px-4 py-2 text-xs font-medium uppercase tracking-wide text-[var(--signal-up)]">
             Trades triangulares ejecutados
           </div>
           <table className="w-full text-sm">
-            <thead className="text-xs uppercase text-zinc-500">
+            <thead className="text-xs uppercase text-[var(--type-mute)]">
               <tr>
                 <th className="px-4 py-2 text-left font-medium">Hora</th>
                 <th className="px-4 py-2 text-left font-medium">Exchange</th>
@@ -2854,20 +2854,20 @@ function TriangularPanel({
             </thead>
             <tbody className="font-mono tabular-numbers">
               {trades.slice(0, 10).map((t) => (
-                <tr key={t.id} className="border-t border-white/[0.04]">
-                  <td className="px-4 py-2 text-zinc-500">
+                <tr key={t.id} className="border-t border-[var(--foam)]">
+                  <td className="px-4 py-2 text-[var(--type-mute)]">
                     {new Date(t.timestamp).toLocaleTimeString("en-US", {
                       hour12: false,
                     })}
                   </td>
-                  <td className="px-4 py-2 text-zinc-300">
+                  <td className="px-4 py-2 text-[var(--type-ink)]">
                     {EXCHANGE_LABEL[t.exchange]}
                   </td>
-                  <td className="px-4 py-2 text-zinc-300">{t.direction}</td>
-                  <td className="px-4 py-2 text-right font-semibold text-emerald-400">
+                  <td className="px-4 py-2 text-[var(--type-ink)]">{t.direction}</td>
+                  <td className="px-4 py-2 text-right font-semibold text-[var(--signal-up)]">
                     +${t.netProfit.toFixed(4)}
                   </td>
-                  <td className="px-4 py-2 text-right text-zinc-500">
+                  <td className="px-4 py-2 text-right text-[var(--type-mute)]">
                     ${t.totalFeesUSD.toFixed(4)}
                   </td>
                 </tr>
@@ -2882,7 +2882,7 @@ function TriangularPanel({
 
 function Footer() {
   return (
-    <footer className="mt-12 space-y-2 border-t border-white/[0.04] pt-6 text-xs text-zinc-500">
+    <footer className="mt-12 space-y-2 border-t border-[var(--foam)] pt-6 text-xs text-[var(--type-mute)]">
       <p>
         Faro models market-maker tier (taker{" "}
         <span className="font-mono">0.02–0.04%</span>, accessible to operators
