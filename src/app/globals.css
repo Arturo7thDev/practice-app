@@ -1,122 +1,283 @@
 @import "tailwindcss";
 
+/* ─────────────────────────────────────────────────────────────────────
+   SISTEMA DE DISEÑO — Faro
+   El faro trabaja de noche sobre el mar. Navy profundo de base, haz
+   cálido en naranja Bitcoin (#F7931A) como acento único dominante.
+   ───────────────────────────────────────────────────────────────────── */
+
 :root {
-  --background: #09090b;
-  --foreground: #fafafa;
+  /* Mar nocturno: tres profundidades de navy */
+  --abyss: #04081a;        /* lo más profundo, fondo absoluto */
+  --deep: #0a1429;         /* mar profundo, body base */
+  --tide: #0f1d3a;         /* zona de surfaces / cards */
+  --foam: #1b2d4f;         /* bordes y separadores */
+  --mist: #2a3f64;         /* texto deuterotario / iconos */
+
+  /* Haz del faro — naranja Bitcoin como acento único dominante */
+  --beacon: #f7931a;       /* el haz mismo */
+  --beacon-warm: #ffb04a;  /* glow del haz */
+  --beacon-dim: #c97615;   /* haz atenuado / sombra cálida */
+
+  /* Lecturas del instrumento (solo donde el lenguaje fintech lo exige) */
+  --signal-up: #4ade80;    /* profits, validaciones positivas */
+  --signal-down: #ef4444;  /* losses, errores */
+  --signal-watch: #f59e0b; /* atención, advertencias suaves */
+
+  /* Tipografía */
+  --type-ink: #f5efe2;     /* texto principal, ligeramente cálido contra el navy */
+  --type-mute: #94a3c0;    /* texto secundario, slate frío */
+  --type-faint: #5d6f8c;   /* texto terciario / metadata */
+
+  /* Background y foreground primarios — compat con Tailwind */
+  --background: var(--deep);
+  --foreground: var(--type-ink);
 }
 
 @theme inline {
   --color-background: var(--background);
   --color-foreground: var(--foreground);
-  --font-sans: var(--font-geist-sans);
-  --font-mono: var(--font-geist-mono);
+  --color-abyss: var(--abyss);
+  --color-deep: var(--deep);
+  --color-tide: var(--tide);
+  --color-foam: var(--foam);
+  --color-mist: var(--mist);
+  --color-beacon: var(--beacon);
+  --color-beacon-warm: var(--beacon-warm);
+  --color-beacon-dim: var(--beacon-dim);
+  --color-signal-up: var(--signal-up);
+  --color-signal-down: var(--signal-down);
+  --color-signal-watch: var(--signal-watch);
+  --color-type-ink: var(--type-ink);
+  --color-type-mute: var(--type-mute);
+  --color-type-faint: var(--type-faint);
+  --font-display: var(--font-display);
+  --font-mono: var(--font-mono);
 }
 
 body {
-  background: var(--background);
-  color: var(--foreground);
+  background: var(--deep);
+  color: var(--type-ink);
+  /* Sans del sistema como fallback técnico para los componentes que no
+     declaran su family. La display y mono se aplican explícitamente. */
   font-family:
-    -apple-system, BlinkMacSystemFont, "SF Pro Display", "SF Pro Text",
-    "Inter", system-ui, sans-serif;
-  font-feature-settings: "cv11", "ss01", "ss03";
+    -apple-system, BlinkMacSystemFont, "SF Pro Text", "Inter", system-ui,
+    sans-serif;
+  font-feature-settings: "ss01", "ss03";
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
   text-rendering: optimizeLegibility;
 }
 
-/* Apple-style ambient background — soft radial highlights anchored to a dark base */
+/* ─────────────────────────────────────────────────────────────────────
+   BACKGROUND — carta de navegación
+   Retícula sutil de coordenadas en navy profundo. El haz del faro vive
+   en el hero (componente React), no en el background global.
+   ───────────────────────────────────────────────────────────────────── */
+
 .ambient-bg {
-  background:
-    radial-gradient(
-      ellipse 80% 60% at 50% 0%,
-      rgba(52, 211, 153, 0.06) 0%,
-      transparent 60%
+  background-color: var(--deep);
+  background-image:
+    /* Retícula principal — líneas verticales finas */
+    linear-gradient(
+      to right,
+      rgba(94, 117, 156, 0.05) 1px,
+      transparent 1px
     ),
-    radial-gradient(
-      ellipse 70% 50% at 80% 30%,
-      rgba(167, 139, 250, 0.05) 0%,
-      transparent 60%
-    ),
-    radial-gradient(
-      ellipse 60% 40% at 20% 50%,
-      rgba(251, 191, 36, 0.04) 0%,
-      transparent 60%
-    ),
-    #09090b;
+    /* Retícula principal — líneas horizontales finas */
+      linear-gradient(
+        to bottom,
+        rgba(94, 117, 156, 0.05) 1px,
+        transparent 1px
+      ),
+    /* Resplandor cálido del horizonte — leve haz residual del faro */
+      radial-gradient(
+        ellipse 90% 50% at 50% -10%,
+        rgba(247, 147, 26, 0.05) 0%,
+        transparent 60%
+      ),
+    /* Profundidad del abismo abajo */
+      radial-gradient(
+        ellipse 100% 80% at 50% 110%,
+        rgba(4, 8, 26, 0.8) 0%,
+        transparent 70%
+      );
+  background-size: 64px 64px, 64px 64px, 100% 100%, 100% 100%;
+  background-position: 0 0, 0 0, 0 0, 0 0;
 }
 
-/* Glass card surface */
+/* ─────────────────────────────────────────────────────────────────────
+   SUPERFICIES — instrumentos marinos, no cards SaaS
+   Bordes precisos 1px, esquinas marcadas con corner-brackets. Glow
+   interno cálido del haz cuando hay algo en foco.
+   ───────────────────────────────────────────────────────────────────── */
+
 .glass {
   background: linear-gradient(
     180deg,
-    rgba(255, 255, 255, 0.03) 0%,
-    rgba(255, 255, 255, 0.01) 100%
+    rgba(15, 29, 58, 0.6) 0%,
+    rgba(10, 20, 41, 0.7) 100%
   );
-  border: 1px solid rgba(255, 255, 255, 0.06);
-  backdrop-filter: blur(20px) saturate(120%);
-  -webkit-backdrop-filter: blur(20px) saturate(120%);
+  border: 1px solid var(--foam);
+  backdrop-filter: blur(12px) saturate(120%);
+  -webkit-backdrop-filter: blur(12px) saturate(120%);
 }
 
 .glass-strong {
   background: linear-gradient(
     180deg,
-    rgba(255, 255, 255, 0.05) 0%,
-    rgba(255, 255, 255, 0.015) 100%
+    rgba(27, 45, 79, 0.7) 0%,
+    rgba(15, 29, 58, 0.8) 100%
   );
-  border: 1px solid rgba(255, 255, 255, 0.08);
-  backdrop-filter: blur(24px) saturate(140%);
-  -webkit-backdrop-filter: blur(24px) saturate(140%);
+  border: 1px solid rgba(94, 117, 156, 0.3);
+  backdrop-filter: blur(16px) saturate(140%);
+  -webkit-backdrop-filter: blur(16px) saturate(140%);
 }
 
-/* Tabular numerals everywhere by default for numbers */
+/* Marca de instrumento — corner brackets que aparecen en las esquinas
+   de un panel para evocar la mira de un sextante o el visor de un
+   instrumento de navegación. Aplicar con .instrument-frame al wrapper. */
+.instrument-frame {
+  position: relative;
+}
+.instrument-frame::before,
+.instrument-frame::after {
+  content: "";
+  position: absolute;
+  width: 10px;
+  height: 10px;
+  border-color: var(--beacon-dim);
+  border-style: solid;
+  pointer-events: none;
+}
+.instrument-frame::before {
+  top: -1px;
+  left: -1px;
+  border-width: 1px 0 0 1px;
+}
+.instrument-frame::after {
+  bottom: -1px;
+  right: -1px;
+  border-width: 0 1px 1px 0;
+}
+
+/* ─────────────────────────────────────────────────────────────────────
+   TIPOGRAFÍA HELPERS
+   ───────────────────────────────────────────────────────────────────── */
+
+.font-display {
+  font-family: var(--font-display), "Iowan Old Style", "Georgia", serif;
+  font-feature-settings: "ss01", "ss02", "ss06", "kern";
+  letter-spacing: -0.01em;
+}
+
 .tabular-numbers {
   font-variant-numeric: tabular-nums;
   font-feature-settings: "tnum" 1;
 }
 
-/* Heartbeat for live indicator — más visible que el pulse anterior, comunica
-   actividad incluso cuando los contadores numericos no se mueven */
+/* Caption tipo carta de navegación: micro-uppercase con tracking amplio */
+.caption-nav {
+  font-family: var(--font-mono), ui-monospace, monospace;
+  font-size: 10px;
+  text-transform: uppercase;
+  letter-spacing: 0.22em;
+  color: var(--type-faint);
+}
+
+/* ─────────────────────────────────────────────────────────────────────
+   ANIMACIONES — haz del faro, sonar, heartbeat
+   ───────────────────────────────────────────────────────────────────── */
+
+/* Heartbeat del live-dot — ahora en naranja del faro */
 @keyframes heartbeat {
   0% {
     opacity: 1;
-    box-shadow: 0 0 0 0 rgba(52, 211, 153, 0.6);
+    box-shadow: 0 0 0 0 rgba(247, 147, 26, 0.65);
     transform: scale(1);
   }
   40% {
     opacity: 1;
-    box-shadow: 0 0 0 8px rgba(52, 211, 153, 0);
+    box-shadow: 0 0 0 8px rgba(247, 147, 26, 0);
     transform: scale(1.25);
   }
   100% {
     opacity: 1;
-    box-shadow: 0 0 0 0 rgba(52, 211, 153, 0);
+    box-shadow: 0 0 0 0 rgba(247, 147, 26, 0);
     transform: scale(1);
   }
 }
 
 .live-dot {
+  background-color: var(--beacon);
   animation: heartbeat 1.4s ease-in-out infinite;
 }
 
-/* Flash verde de 400ms cuando un valor cambia — el ojo capta el cambio
-   incluso si no está mirando ese campo específico */
+/* Flash cuando un dato cambia — ahora en el cálido del haz */
 @keyframes value-flash {
   0% {
-    background-color: rgba(52, 211, 153, 0);
-    color: var(--flash-target, inherit);
+    background-color: rgba(247, 147, 26, 0);
+    color: inherit;
   }
   20% {
-    background-color: rgba(52, 211, 153, 0.18);
-    color: #6ee7b7;
+    background-color: rgba(247, 147, 26, 0.18);
+    color: var(--beacon-warm);
   }
   100% {
-    background-color: rgba(52, 211, 153, 0);
+    background-color: rgba(247, 147, 26, 0);
     color: inherit;
   }
 }
 
 .value-flash {
   animation: value-flash 600ms ease-out;
-  border-radius: 0.25rem;
+  border-radius: 2px;
   padding-inline: 0.15rem;
+}
+
+/* Barrido del faro — rotación lenta y continua, 14s por vuelta */
+@keyframes beacon-sweep {
+  from {
+    transform: rotate(0deg);
+  }
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+.beacon-sweep {
+  animation: beacon-sweep 14s linear infinite;
+  transform-origin: center;
+}
+
+/* Barrido radar/sonar — más rápido (4s) para sección de scanning activo */
+@keyframes radar-sweep {
+  from {
+    transform: rotate(0deg);
+  }
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+.radar-sweep {
+  animation: radar-sweep 4s linear infinite;
+  transform-origin: center;
+}
+
+/* Pulso del sonar — onda expansiva que decae */
+@keyframes sonar-ping {
+  0% {
+    transform: scale(0.5);
+    opacity: 0.7;
+  }
+  100% {
+    transform: scale(2.5);
+    opacity: 0;
+  }
+}
+
+.sonar-ping {
+  animation: sonar-ping 3s ease-out infinite;
+  transform-origin: center;
 }
