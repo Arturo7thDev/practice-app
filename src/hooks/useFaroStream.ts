@@ -20,6 +20,8 @@ export interface Ticker {
   ageMs: number;
 }
 
+export type SurvivalBucket = "high" | "medium" | "low";
+
 export interface Opportunity {
   timestamp: number;
   pair: Pair;
@@ -43,6 +45,10 @@ export interface Opportunity {
   suspicious: boolean;
   retailTradingFees: number;
   retailNetProfit: number;
+  tobiBuy: number;
+  tobiSell: number;
+  survivalProb: number;
+  survivalBucket: SurvivalBucket;
 }
 
 export interface WalletBalance {
@@ -80,7 +86,20 @@ export interface ScanCounters {
   skippedStaleData: number;
   skippedCooldown: number;
   skippedInsufficientCapital: number;
+  skippedLowSurvival: number;
   lostOpportunityUSD: number;
+}
+
+export interface TobiCalibration {
+  detectedHigh: number;
+  detectedMedium: number;
+  detectedLow: number;
+  survivedHigh: number;
+  survivedMedium: number;
+  survivedLow: number;
+  hitRateHigh: number;
+  hitRateMedium: number;
+  hitRateLow: number;
 }
 
 export interface RoutePerformance {
@@ -152,6 +171,7 @@ export interface PortfolioStats {
   tradesByPair: Record<Pair, number>;
   risk: RiskMetrics;
   fintech: FintechMetrics;
+  tobi: TobiCalibration;
 }
 
 export interface Decision {
@@ -163,7 +183,8 @@ export interface Decision {
     | "stale"
     | "cooldown"
     | "suspicious"
-    | "insufficient_capital";
+    | "insufficient_capital"
+    | "low_survival";
   netProfit: number;
   reason: string;
 }

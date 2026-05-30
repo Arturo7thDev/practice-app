@@ -16,6 +16,7 @@ import {
   type PortfolioStats,
   type RiskMetrics,
   type ScanCounters,
+  type TobiCalibration,
   type Ticker,
   type TriangularOpportunity,
   type WalletBalance,
@@ -77,6 +78,7 @@ const DECISION_COLOR: Record<Decision["outcome"], string> = {
   stale: "text-zinc-500",
   suspicious: "text-red-400",
   insufficient_capital: "text-zinc-500",
+  low_survival: "text-sky-400",
 };
 
 const DECISION_LABEL: Record<Decision["outcome"], string> = {
@@ -85,6 +87,7 @@ const DECISION_LABEL: Record<Decision["outcome"], string> = {
   stale: "DATA VIEJA",
   suspicious: "SOSPECHOSO",
   insufficient_capital: "SIN CAPITAL",
+  low_survival: "BAJO TOBI",
 };
 
 export default function Home() {
@@ -137,6 +140,18 @@ export default function Home() {
           subtitle="Sharpe, Sortino, Profit Factor, latencias de procesamiento y alpha decay — el idioma estándar de la industria"
         >
           <FintechPanel fintech={state?.stats.fintech} />
+        </Section>
+
+        <Section
+          icon={Network}
+          eyebrow="Señal propia"
+          title="TOBI · Top of Book Imbalance"
+          subtitle="Filtro predictivo derivado del orderbook L1. El bot no persigue oportunidades que el modelo predice que van a morir antes de capturarse"
+        >
+          <TobiPanel
+            tobi={state?.stats.tobi}
+            skippedLowSurvival={state?.counters.skippedLowSurvival ?? 0}
+          />
         </Section>
 
         <Section
@@ -929,6 +944,197 @@ function MetricBox({
   );
 }
 
+function SurvivalBadge({
+  prob,
+  bucket,
+}: {
+  prob: number;
+  bucket: "high" | "medium" | "low";
+}) {
+  const cls =
+    bucket === "high"
+      ? "bg-emerald-500/10 text-emerald-400"
+      : bucket === "low"
+        ? "bg-red-500/10 text-red-400"
+        : "bg-zinc-700/40 text-zinc-400";
+  return (
+    <span
+      className={`rounded-full px-2 py-1 text-[11px] font-medium tabular-numbers ${cls}`}
+      title={`Survival probability: ${(prob * 100).toFixed(0)}%`}
+    >
+      {(prob * 100).toFixed(0)}%
+    </span>
+  );
+}
+
+function TobiPanel({
+  tobi,
+  skippedLowSurvival,
+}: {
+  tobi: TobiCalibration | undefined;
+  skippedLowSurvival: number;
+}) {
+  if (!tobi) {
+    return (
+      <div className="glass rounded-2xl p-6 text-sm text-zinc-500">
+        Inicializando modelo TOBI…
+      </div>
+    );
+  }
+
+  const totalDetected =
+    tobi.detectedHigh + tobi.detectedMedium + tobi.detectedLow;
+
+  // Cuando "high" tiene mejor hit rate que "low", el modelo discrimina bien.
+  const isCalibrated =
+    totalDetected >= 10 && tobi.hitRateHigh > tobi.hitRateLow;
+
+  return (
+    <div className="space-y-4">
+      {/* Explicación con la fórmula */}
+      <div className="glass rounded-2xl p-5">
+        <div className="mb-3 flex items-center gap-2 text-[10px] font-semibold uppercase tracking-[0.2em] text-emerald-400">
+          <Activity className="h-3.5 w-3.5" />
+          Cómo funciona
+        </div>
+        <p className="text-sm leading-relaxed text-zinc-300">
+          Para cada oportunidad cross-exchange, calculamos el imbalance del
+          libro en ambos exchanges:
+        </p>
+        <div className="mt-3 rounded-xl bg-black/40 p-4 font-mono text-xs text-zinc-300">
+          TOBI = (bidQty − askQty) / (bidQty + askQty)
+          <br />
+          survivalProb = (TOBI<sub>sell</sub> − TOBI<sub>buy</sub> + 2) / 4
+        </div>
+        <p className="mt-3 text-sm leading-relaxed text-zinc-400">
+          Si en el exchange donde compramos hay presión vendedora, el precio va
+          a bajar (mejor para nosotros). Si en el exchange donde vendemos hay
+          presión compradora, el precio va a subir (mejor para nosotros). Las
+          dos cosas juntas hacen que el spread <strong>crezca</strong> y la
+          oportunidad <strong>viva más tiempo</strong>.
+        </p>
+        <p className="mt-2 text-xs text-zinc-500">
+          El bot bloquea ejecución cuando survivalProb &lt; 0.5. Bloqueadas
+          hasta ahora:{" "}
+          <span className="font-mono tabular-numbers text-zinc-300">
+            {skippedLowSurvival.toLocaleString()}
+          </span>
+        </p>
+      </div>
+
+      {/* Calibración por bucket */}
+      <div className="glass rounded-2xl p-5">
+        <div className="mb-3 flex items-center justify-between">
+          <div className="flex items-center gap-2 text-[10px] font-semibold uppercase tracking-[0.2em] text-emerald-400">
+            <Activity className="h-3.5 w-3.5" />
+            Calibración en vivo
+          </div>
+          {totalDetected < 10 ? (
+            <span className="text-[10px] uppercase tracking-wide text-zinc-500">
+              Acumulando muestras ({totalDetected}/10)
+            </span>
+          ) : isCalibrated ? (
+            <span className="rounded-full bg-emerald-500/10 px-2 py-1 text-[10px] font-medium uppercase tracking-wide text-emerald-400">
+              Modelo discrimina
+            </span>
+          ) : (
+            <span className="rounded-full bg-amber-500/10 px-2 py-1 text-[10px] font-medium uppercase tracking-wide text-amber-400">
+              Pendiente de validación
+            </span>
+          )}
+        </div>
+        <div className="grid grid-cols-3 gap-3">
+          <TobiBucketCard
+            bucket="high"
+            label="prob ≥ 0.6"
+            detected={tobi.detectedHigh}
+            survived={tobi.survivedHigh}
+            hitRate={tobi.hitRateHigh}
+          />
+          <TobiBucketCard
+            bucket="medium"
+            label="0.4 – 0.6"
+            detected={tobi.detectedMedium}
+            survived={tobi.survivedMedium}
+            hitRate={tobi.hitRateMedium}
+          />
+          <TobiBucketCard
+            bucket="low"
+            label="prob ≤ 0.4"
+            detected={tobi.detectedLow}
+            survived={tobi.survivedLow}
+            hitRate={tobi.hitRateLow}
+          />
+        </div>
+        <p className="mt-3 text-[11px] text-zinc-500">
+          <strong className="text-zinc-400">Lectura:</strong> hit rate = % de
+          oportunidades que sobrevivieron &gt; 1s antes de morir. Si el bucket
+          "high" supera al "low", el modelo discrimina correctamente.{" "}
+          <span className="text-zinc-600">
+            Es la prueba científica de que la señal funciona — sin papers,
+            con datos en vivo.
+          </span>
+        </p>
+      </div>
+    </div>
+  );
+}
+
+function TobiBucketCard({
+  bucket,
+  label,
+  detected,
+  survived,
+  hitRate,
+}: {
+  bucket: "high" | "medium" | "low";
+  label: string;
+  detected: number;
+  survived: number;
+  hitRate: number;
+}) {
+  const titleCls =
+    bucket === "high"
+      ? "text-emerald-400"
+      : bucket === "low"
+        ? "text-red-400"
+        : "text-zinc-400";
+  const valueCls =
+    detected === 0
+      ? "text-zinc-600"
+      : bucket === "high"
+        ? "text-emerald-400"
+        : bucket === "low"
+          ? "text-red-400"
+          : "text-zinc-300";
+
+  return (
+    <div className="rounded-xl bg-black/30 p-4">
+      <div
+        className={`text-[10px] font-semibold uppercase tracking-[0.18em] ${titleCls}`}
+      >
+        {bucket}
+      </div>
+      <div className="mt-1 text-[10px] text-zinc-500">{label}</div>
+      <div
+        className={`mt-3 font-mono text-2xl font-semibold tabular-numbers leading-none ${valueCls}`}
+      >
+        {detected === 0 ? "—" : `${(hitRate * 100).toFixed(0)}%`}
+      </div>
+      <div className="mt-2 text-[10px] text-zinc-500">
+        <span className="font-mono tabular-numbers text-zinc-400">
+          {survived}
+        </span>
+        {" / "}
+        <span className="font-mono tabular-numbers text-zinc-400">
+          {detected}
+        </span>{" "}
+        sobrevivieron &gt; 1s
+      </div>
+    </div>
+  );
+}
+
 function DecisionsPanel({ counters }: { counters: ScanCounters | undefined }) {
   if (!counters) {
     return (
@@ -941,10 +1147,11 @@ function DecisionsPanel({ counters }: { counters: ScanCounters | undefined }) {
     counters.skippedSuspicious +
     counters.skippedStaleData +
     counters.skippedCooldown +
-    counters.skippedInsufficientCapital;
+    counters.skippedInsufficientCapital +
+    counters.skippedLowSurvival;
 
   return (
-    <div className="grid grid-cols-2 gap-3 lg:grid-cols-4">
+    <div className="grid grid-cols-2 gap-3 lg:grid-cols-5">
       <SkipBox
         label="Cooldown"
         value={counters.skippedCooldown}
@@ -952,10 +1159,16 @@ function DecisionsPanel({ counters }: { counters: ScanCounters | undefined }) {
         subtitle="throttle 3s por par"
       />
       <SkipBox
+        label="Bajo TOBI"
+        value={counters.skippedLowSurvival}
+        color="text-sky-400"
+        subtitle="señal predice muerte"
+      />
+      <SkipBox
         label="Sospechosa"
         value={counters.skippedSuspicious}
         color="text-red-400"
-        subtitle="spread > 2% (circuit breaker)"
+        subtitle="spread > 2% (breaker)"
       />
       <SkipBox
         label="Data vieja"
@@ -969,7 +1182,7 @@ function DecisionsPanel({ counters }: { counters: ScanCounters | undefined }) {
         color="text-zinc-400"
         subtitle="wallet agotado"
       />
-      <div className="col-span-2 glass rounded-2xl p-4 lg:col-span-4">
+      <div className="col-span-2 glass rounded-2xl p-4 lg:col-span-5">
         <div className="flex items-baseline justify-between">
           <div className="text-xs uppercase tracking-wide text-zinc-500">
             Total de rentables descartadas
@@ -1694,6 +1907,7 @@ function OpportunitiesTable({ opps }: { opps: Opportunity[] }) {
             <th className="px-4 py-3 text-right font-medium">Bruto</th>
             <th className="px-4 py-3 text-right font-medium">Neto (inst)</th>
             <th className="px-4 py-3 text-right font-medium">Neto (retail)</th>
+            <th className="px-4 py-3 text-right font-medium">TOBI</th>
             <th className="px-4 py-3 text-right font-medium">Veredicto</th>
           </tr>
         </thead>
@@ -1721,6 +1935,9 @@ function OpportunitiesTable({ opps }: { opps: Opportunity[] }) {
               >
                 {o.retailNetProfit >= 0 ? "+" : ""}$
                 {o.retailNetProfit.toFixed(2)}
+              </td>
+              <td className="px-4 py-2 text-right">
+                <SurvivalBadge prob={o.survivalProb} bucket={o.survivalBucket} />
               </td>
               <td className="px-4 py-2 text-right">
                 {o.suspicious ? (
