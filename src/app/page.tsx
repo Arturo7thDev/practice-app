@@ -19,6 +19,21 @@ import {
 } from "@/hooks/useFaroStream";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import {
+  Activity,
+  AlertTriangle,
+  ArrowLeftRight,
+  Brain,
+  BookOpen,
+  Coins,
+  Gauge,
+  LineChart as LineChartIcon,
+  Network,
+  Radio,
+  ShieldCheck,
+  Sparkles,
+  TrendingUp,
+} from "lucide-react";
+import {
   CartesianGrid,
   Line,
   LineChart,
@@ -71,10 +86,12 @@ export default function Home() {
   return (
     <main className="min-h-screen text-zinc-50">
       <div className="mx-auto max-w-6xl px-5 py-10 sm:px-8 sm:py-14">
-        <Header
+        <Hero
           connected={connected}
           counters={state?.counters}
           executedTrades={state?.stats.totalTrades ?? 0}
+          btcPrice={state?.stats.currentBTCPrice ?? 0}
+          ethPrice={state?.stats.currentETHPrice ?? 0}
         />
 
         <DifferentiatorBanner />
@@ -82,6 +99,7 @@ export default function Home() {
         <HeroStats stats={state?.stats} counters={state?.counters} />
 
         <Section
+          icon={Brain}
           eyebrow="Intelligence"
           title="Strategy"
           subtitle="Aggregated performance metrics across all executions"
@@ -90,6 +108,7 @@ export default function Home() {
         </Section>
 
         <Section
+          icon={Gauge}
           eyebrow="Process"
           title="Bot decisions"
           subtitle="Every profitable opportunity classified by outcome"
@@ -98,6 +117,7 @@ export default function Home() {
         </Section>
 
         <Section
+          icon={ShieldCheck}
           eyebrow="The truth"
           title="Full cost breakdown"
           subtitle="Trading + amortized withdrawal + estimated slippage + network latency"
@@ -106,6 +126,7 @@ export default function Home() {
         </Section>
 
         <Section
+          icon={AlertTriangle}
           eyebrow="Risk"
           title="Risk metrics"
           subtitle="Drawdown, exposure, wallet imbalance, circuit breaker"
@@ -114,6 +135,7 @@ export default function Home() {
         </Section>
 
         <Section
+          icon={Radio}
           eyebrow="Real-time"
           title="Live decisions"
           subtitle="Last 15 evaluations with full reasoning"
@@ -122,6 +144,7 @@ export default function Home() {
         </Section>
 
         <Section
+          icon={TrendingUp}
           eyebrow="Performance"
           title="Equity curve"
           subtitle="Cumulative net P&L across both pairs"
@@ -130,6 +153,7 @@ export default function Home() {
         </Section>
 
         <Section
+          icon={Coins}
           eyebrow="Capital"
           title="Wallet balances"
           subtitle="Initial: $50K USDT + 0.5 BTC + 10 ETH per exchange"
@@ -160,6 +184,7 @@ export default function Home() {
         ))}
 
         <Section
+          icon={BookOpen}
           eyebrow="Ledger"
           title="Executed trades"
           subtitle="Faro (institutional fees) vs Retail (0.5%) on every trade"
@@ -168,6 +193,7 @@ export default function Home() {
         </Section>
 
         <Section
+          icon={Sparkles}
           eyebrow="Advanced"
           title="Triangular arbitrage"
           subtitle="Within-exchange BTC ↔ ETH ↔ USDT cycles, both directions"
@@ -184,58 +210,177 @@ export default function Home() {
   );
 }
 
-function Header({
+function Hero({
   connected,
   counters,
   executedTrades,
+  btcPrice,
+  ethPrice,
 }: {
   connected: boolean;
   counters: ScanCounters | undefined;
   executedTrades: number;
+  btcPrice: number;
+  ethPrice: number;
 }) {
   return (
-    <header className="mb-12">
-      <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
-        <div>
-          <div className="mb-3 inline-flex items-center gap-2 rounded-full border border-white/10 bg-white/5 px-3 py-1 text-xs font-medium text-zinc-300 backdrop-blur">
-            <span
-              className={`live-dot inline-block h-1.5 w-1.5 rounded-full ${
-                connected ? "bg-emerald-400" : "bg-zinc-600"
-              }`}
-            />
-            {connected ? "live" : "connecting…"}
+    <header className="relative mb-16 pt-4 sm:pt-8">
+      <FloatingNetwork className="pointer-events-none absolute inset-0 -z-10 opacity-50" />
+      <div className="relative">
+        <div className="mb-6 inline-flex items-center gap-2 rounded-full border border-white/10 bg-white/5 px-3 py-1.5 text-xs font-medium text-zinc-300 backdrop-blur">
+          <span
+            className={`live-dot inline-block h-1.5 w-1.5 rounded-full ${
+              connected ? "bg-emerald-400" : "bg-zinc-600"
+            }`}
+          />
+          {connected ? "live in production" : "connecting…"}
+        </div>
+
+        <div className="flex flex-col gap-8 lg:flex-row lg:items-start lg:gap-12">
+          <div className="flex-1">
+            <h1 className="text-5xl font-semibold leading-[1.05] tracking-tight text-white sm:text-6xl lg:text-7xl">
+              Honest crypto<br />
+              <span className="bg-gradient-to-r from-emerald-300 via-emerald-400 to-teal-300 bg-clip-text text-transparent">
+                arbitrage.
+              </span>
+            </h1>
+            <p className="mt-6 max-w-2xl text-base leading-relaxed text-zinc-400 sm:text-lg">
+              Real-time linear AND triangular arbitrage across{" "}
+              <span className="text-zinc-200">3 exchanges</span> and{" "}
+              <span className="text-zinc-200">2 pairs</span>. Executes only
+              what survives the full cost stack — fees, slippage, withdrawal,
+              latency. Built for the operators that care about what actually
+              ends up in their wallet.
+            </p>
+            <div className="mt-8 flex flex-wrap items-center gap-x-8 gap-y-3 text-sm text-zinc-500">
+              <Stat
+                n={(counters?.opportunitiesScanned ?? 0).toLocaleString()}
+                label="opportunities scanned"
+                tone="text-zinc-200"
+              />
+              <span className="text-zinc-700">·</span>
+              <Stat
+                n={(counters?.profitableDetected ?? 0).toLocaleString()}
+                label="profitable after fees"
+                tone="text-amber-400"
+              />
+              <span className="text-zinc-700">·</span>
+              <Stat
+                n={executedTrades.toLocaleString()}
+                label="trades executed"
+                tone="text-emerald-400"
+              />
+            </div>
           </div>
-          <h1 className="flex items-center gap-3 text-4xl font-semibold tracking-tight text-white sm:text-5xl">
-            <FaroLogo className="h-9 w-9 text-amber-400" />
-            <span>Faro</span>
-          </h1>
-          <p className="mt-3 max-w-2xl text-base font-normal text-zinc-400 sm:text-lg">
-            Honest crypto arbitrage across 3 exchanges, 2 pairs, both linear
-            and triangular cycles. Executes only what survives the full cost
-            stack.
-          </p>
+
+          <div className="lg:w-[340px]">
+            <LiveTicker btcPrice={btcPrice} ethPrice={ethPrice} />
+          </div>
         </div>
       </div>
-      <div className="mt-6 flex flex-wrap items-center gap-x-8 gap-y-3 text-xs tabular-numbers text-zinc-500">
-        <Stat
-          n={(counters?.opportunitiesScanned ?? 0).toLocaleString()}
-          label="scanned"
-          tone="text-zinc-200"
-        />
-        <span className="text-zinc-700">·</span>
-        <Stat
-          n={(counters?.profitableDetected ?? 0).toLocaleString()}
-          label="profitable after fees"
-          tone="text-amber-400"
-        />
-        <span className="text-zinc-700">·</span>
-        <Stat
-          n={executedTrades.toLocaleString()}
-          label="executed"
-          tone="text-emerald-400"
-        />
-      </div>
     </header>
+  );
+}
+
+function LiveTicker({
+  btcPrice,
+  ethPrice,
+}: {
+  btcPrice: number;
+  ethPrice: number;
+}) {
+  return (
+    <div className="glass-strong rounded-3xl p-6">
+      <div className="mb-4 flex items-center justify-between">
+        <span className="text-[10px] font-semibold uppercase tracking-[0.22em] text-zinc-500">
+          Live mid prices
+        </span>
+        <Network className="h-4 w-4 text-emerald-400" />
+      </div>
+      <div className="space-y-5">
+        <div>
+          <div className="flex items-baseline justify-between">
+            <span className="text-xs font-medium uppercase tracking-widest text-amber-400/80">
+              Bitcoin
+            </span>
+            <span className="text-[10px] text-zinc-500">BTC/USDT</span>
+          </div>
+          <div className="mt-1 font-mono text-3xl font-semibold tabular-numbers leading-none text-white">
+            {btcPrice > 0
+              ? `$${btcPrice.toLocaleString("en-US", { maximumFractionDigits: 2, minimumFractionDigits: 2 })}`
+              : "—"}
+          </div>
+        </div>
+        <div className="h-px bg-white/[0.06]" />
+        <div>
+          <div className="flex items-baseline justify-between">
+            <span className="text-xs font-medium uppercase tracking-widest text-violet-400/80">
+              Ethereum
+            </span>
+            <span className="text-[10px] text-zinc-500">ETH/USDT</span>
+          </div>
+          <div className="mt-1 font-mono text-3xl font-semibold tabular-numbers leading-none text-white">
+            {ethPrice > 0
+              ? `$${ethPrice.toLocaleString("en-US", { maximumFractionDigits: 2, minimumFractionDigits: 2 })}`
+              : "—"}
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+function FloatingNetwork({ className }: { className?: string }) {
+  return (
+    <svg
+      className={className}
+      viewBox="0 0 600 400"
+      xmlns="http://www.w3.org/2000/svg"
+      aria-hidden="true"
+    >
+      <defs>
+        <linearGradient id="line-grad" x1="0" y1="0" x2="1" y2="1">
+          <stop offset="0%" stopColor="#34d399" stopOpacity="0.4" />
+          <stop offset="100%" stopColor="#34d399" stopOpacity="0" />
+        </linearGradient>
+        <linearGradient id="line-grad-2" x1="0" y1="0" x2="1" y2="1">
+          <stop offset="0%" stopColor="#a78bfa" stopOpacity="0.35" />
+          <stop offset="100%" stopColor="#a78bfa" stopOpacity="0" />
+        </linearGradient>
+        <radialGradient id="node-glow" cx="50%" cy="50%" r="50%">
+          <stop offset="0%" stopColor="#34d399" stopOpacity="0.6" />
+          <stop offset="100%" stopColor="#34d399" stopOpacity="0" />
+        </radialGradient>
+      </defs>
+      {/* Connecting lines suggesting cross-exchange flow */}
+      <path
+        d="M 80 100 Q 280 60 520 140"
+        stroke="url(#line-grad)"
+        strokeWidth="1"
+        fill="none"
+      />
+      <path
+        d="M 80 280 Q 320 380 540 300"
+        stroke="url(#line-grad-2)"
+        strokeWidth="1"
+        fill="none"
+      />
+      <path
+        d="M 120 200 Q 300 240 480 200"
+        stroke="url(#line-grad)"
+        strokeWidth="0.5"
+        fill="none"
+      />
+      {/* Node glows */}
+      <circle cx="80" cy="100" r="20" fill="url(#node-glow)" />
+      <circle cx="80" cy="100" r="3" fill="#34d399" />
+      <circle cx="520" cy="140" r="20" fill="url(#node-glow)" />
+      <circle cx="520" cy="140" r="3" fill="#34d399" />
+      <circle cx="80" cy="280" r="18" fill="url(#node-glow)" opacity="0.7" />
+      <circle cx="80" cy="280" r="2.5" fill="#a78bfa" />
+      <circle cx="540" cy="300" r="18" fill="url(#node-glow)" opacity="0.7" />
+      <circle cx="540" cy="300" r="2.5" fill="#a78bfa" />
+    </svg>
   );
 }
 
@@ -400,11 +545,13 @@ function StatCard({
 }
 
 function Section({
+  icon: Icon,
   eyebrow,
   title,
   subtitle,
   children,
 }: {
+  icon?: React.ComponentType<{ className?: string }>;
   eyebrow?: string;
   title: string;
   subtitle?: string;
@@ -412,18 +559,25 @@ function Section({
 }) {
   return (
     <section className="mb-14 sm:mb-16">
-      <div className="mb-5">
-        {eyebrow ? (
-          <div className="mb-1 text-[10px] font-semibold uppercase tracking-[0.22em] text-emerald-400/80">
-            {eyebrow}
+      <div className="mb-6 flex items-start gap-4">
+        {Icon ? (
+          <div className="glass mt-1 flex h-10 w-10 shrink-0 items-center justify-center rounded-2xl">
+            <Icon className="h-5 w-5 text-emerald-400" />
           </div>
         ) : null}
-        <h2 className="text-2xl font-semibold tracking-tight text-white sm:text-3xl">
-          {title}
-        </h2>
-        {subtitle ? (
-          <p className="mt-1 text-sm text-zinc-500">{subtitle}</p>
-        ) : null}
+        <div className="min-w-0 flex-1">
+          {eyebrow ? (
+            <div className="mb-1 text-[10px] font-semibold uppercase tracking-[0.22em] text-emerald-400/80">
+              {eyebrow}
+            </div>
+          ) : null}
+          <h2 className="text-2xl font-semibold tracking-tight text-white sm:text-3xl">
+            {title}
+          </h2>
+          {subtitle ? (
+            <p className="mt-1 text-sm text-zinc-500">{subtitle}</p>
+          ) : null}
+        </div>
       </div>
       {children}
     </section>
