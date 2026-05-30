@@ -85,10 +85,7 @@ const DECISION_LABEL: Record<Decision["outcome"], string> = {
 };
 
 export default function Home() {
-  const { state, connected, lastMessageAt } = useFaroStream();
-  const sseHealthy =
-    lastMessageAt !== null && Date.now() - lastMessageAt < 2000;
-  void sseHealthy; // disponible para usar en el futuro si querés mostrar indicador
+  const { state, connected } = useFaroStream();
 
   return (
     <main className="min-h-screen text-zinc-50">

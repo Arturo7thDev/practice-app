@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 
 export type ExchangeName = "binance" | "coinbase" | "kraken";
 export type Pair = "BTC/USDT" | "ETH/USDT" | "ETH/BTC";
@@ -241,7 +241,11 @@ const FARO_URL =
 export function useFaroStream() {
   const [state, setState] = useState<FaroState | null>(null);
   const [connected, setConnected] = useState(false);
-  const [lastMessageAt, setLastMessageAt] = useState<number | null>(null);
+
+  // useRef en vez de useState para que el listener de visibility lea el valor
+  // ACTUAL, no el inicial capturado por closure. Fix del code review (issue crítico):
+  // antes el closure veía siempre `null` y reconectaba en cada visibilitychange.
+  const lastMessageAtRef = useRef<number | null>(null);
 
   useEffect(() => {
     let es: EventSource | null = null;
@@ -256,7 +260,7 @@ export function useFaroStream() {
       es.onmessage = (e) => {
         try {
           setState(JSON.parse(e.data));
-          setLastMessageAt(Date.now());
+          lastMessageAtRef.current = Date.now();
         } catch (err) {
           console.error("Failed to parse SSE message", err);
         }
@@ -265,14 +269,12 @@ export function useFaroStream() {
 
     connect();
 
-    // Detectar cuando la pestaña vuelve a visible (iPad/iPhone desbloqueado,
-    // pestaña vuelta al foco) y forzar reconexión para refrescar el stream.
+    // iPad/iPhone lock + tab visibility — reconectar solo si genuinamente
+    // no hay mensajes recientes (5s threshold).
     const handleVisibility = () => {
       if (document.visibilityState === "visible") {
-        // Si pasaron más de 5s sin mensajes, asumimos conexión zombi y reconectamos.
-        const stale = lastMessageAt
-          ? Date.now() - lastMessageAt > 5000
-          : true;
+        const last = lastMessageAtRef.current;
+        const stale = last === null || Date.now() - last > 5000;
         if (stale) {
           setConnected(false);
           connect();
@@ -287,10 +289,7 @@ export function useFaroStream() {
       document.removeEventListener("visibilitychange", handleVisibility);
       window.removeEventListener("focus", handleVisibility);
     };
-    // lastMessageAt change should not trigger reconnect; we read its latest
-    // value via closure on visibility events. Disable exhaustive-deps for that.
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
-  return { state, connected, lastMessageAt };
+  return { state, connected };
 }
