@@ -69,8 +69,8 @@ export default function Home() {
   const { state, connected } = useFaroStream();
 
   return (
-    <main className="min-h-screen bg-zinc-950 text-zinc-50">
-      <div className="mx-auto max-w-6xl px-4 py-8 sm:px-6 sm:py-10">
+    <main className="min-h-screen text-zinc-50">
+      <div className="mx-auto max-w-6xl px-5 py-10 sm:px-8 sm:py-14">
         <Header
           connected={connected}
           counters={state?.counters}
@@ -81,31 +81,59 @@ export default function Home() {
 
         <HeroStats stats={state?.stats} counters={state?.counters} />
 
-        <Section title="Strategy intelligence">
+        <Section
+          eyebrow="Intelligence"
+          title="Strategy"
+          subtitle="Aggregated performance metrics across all executions"
+        >
           <StrategyPanel stats={state?.stats} />
         </Section>
 
-        <Section title="Bot decisions · skip breakdown">
+        <Section
+          eyebrow="Process"
+          title="Bot decisions"
+          subtitle="Every profitable opportunity classified by outcome"
+        >
           <DecisionsPanel counters={state?.counters} />
         </Section>
 
-        <Section title="Full cost breakdown · trading + withdrawal + slippage + latency">
+        <Section
+          eyebrow="The truth"
+          title="Full cost breakdown"
+          subtitle="Trading + amortized withdrawal + estimated slippage + network latency"
+        >
           <CostBreakdown stats={state?.stats} />
         </Section>
 
-        <Section title="Risk metrics · circuit breaker, drawdown, exposure">
+        <Section
+          eyebrow="Risk"
+          title="Risk metrics"
+          subtitle="Drawdown, exposure, wallet imbalance, circuit breaker"
+        >
           <RiskPanel risk={state?.stats.risk} />
         </Section>
 
-        <Section title="Live decisions · last 15 bot decisions in real-time">
+        <Section
+          eyebrow="Real-time"
+          title="Live decisions"
+          subtitle="Last 15 evaluations with full reasoning"
+        >
           <DecisionsFeed decisions={state?.decisions ?? []} />
         </Section>
 
-        <Section title="P&L equity curve (both pairs combined)">
+        <Section
+          eyebrow="Performance"
+          title="Equity curve"
+          subtitle="Cumulative net P&L across both pairs"
+        >
           <EquityCurve trades={state?.executedTrades ?? []} />
         </Section>
 
-        <Section title="Wallet balances per exchange">
+        <Section
+          eyebrow="Capital"
+          title="Wallet balances"
+          subtitle="Initial: $50K USDT + 0.5 BTC + 10 ETH per exchange"
+        >
           <div className="grid grid-cols-1 gap-4 md:grid-cols-3">
             {EXCHANGES.map((ex) => (
               <WalletCard
@@ -131,11 +159,19 @@ export default function Home() {
           />
         ))}
 
-        <Section title="Executed trades · all pairs · Faro vs Retail (0.5%)">
+        <Section
+          eyebrow="Ledger"
+          title="Executed trades"
+          subtitle="Faro (institutional fees) vs Retail (0.5%) on every trade"
+        >
           <TradesTable trades={state?.executedTrades ?? []} />
         </Section>
 
-        <Section title="Triangular arbitrage · within a single exchange (BTC ↔ ETH ↔ USDT)">
+        <Section
+          eyebrow="Advanced"
+          title="Triangular arbitrage"
+          subtitle="Within-exchange BTC ↔ ETH ↔ USDT cycles, both directions"
+        >
           <TriangularPanel
             opps={state?.triangularOpportunities ?? []}
             trades={state?.triangularTrades ?? []}
@@ -158,55 +194,65 @@ function Header({
   executedTrades: number;
 }) {
   return (
-    <header className="mb-8">
-      <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+    <header className="mb-12">
+      <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
         <div>
-          <h1 className="flex items-center gap-3 text-3xl font-semibold tracking-tight">
-            <FaroLogo className="h-7 w-7 text-amber-400" />
+          <div className="mb-3 inline-flex items-center gap-2 rounded-full border border-white/10 bg-white/5 px-3 py-1 text-xs font-medium text-zinc-300 backdrop-blur">
+            <span
+              className={`live-dot inline-block h-1.5 w-1.5 rounded-full ${
+                connected ? "bg-emerald-400" : "bg-zinc-600"
+              }`}
+            />
+            {connected ? "live" : "connecting…"}
+          </div>
+          <h1 className="flex items-center gap-3 text-4xl font-semibold tracking-tight text-white sm:text-5xl">
+            <FaroLogo className="h-9 w-9 text-amber-400" />
             <span>Faro</span>
-            <span className="font-normal text-zinc-500">·</span>{" "}
-            <span className="font-normal text-zinc-400">
-              Honest crypto arbitrage
-            </span>
           </h1>
-          <p className="mt-1 text-sm text-zinc-500">
-            Real-time detection across 3 exchanges · 2 pairs (BTC + ETH).
-            Executes only what survives fees + slippage. Modeled at market-maker
-            tier (<span className="font-mono">0.02–0.04%</span>).
+          <p className="mt-3 max-w-2xl text-base font-normal text-zinc-400 sm:text-lg">
+            Honest crypto arbitrage across 3 exchanges, 2 pairs, both linear
+            and triangular cycles. Executes only what survives the full cost
+            stack.
           </p>
         </div>
-        <div className="flex items-center gap-2 text-sm">
-          <span
-            className={`inline-block h-2 w-2 rounded-full ${
-              connected ? "animate-pulse bg-emerald-500" : "bg-zinc-600"
-            }`}
-          />
-          <span className="text-zinc-400">
-            {connected ? "live" : "connecting…"}
-          </span>
-        </div>
       </div>
-      <div className="mt-3 flex flex-wrap gap-x-6 gap-y-2 font-mono text-xs tabular-nums text-zinc-500">
-        <span>
-          <span className="text-zinc-300">
-            {(counters?.opportunitiesScanned ?? 0).toLocaleString()}
-          </span>{" "}
-          scanned
-        </span>
-        <span>
-          <span className="text-amber-400">
-            {(counters?.profitableDetected ?? 0).toLocaleString()}
-          </span>{" "}
-          profitable
-        </span>
-        <span>
-          <span className="text-emerald-400">
-            {executedTrades.toLocaleString()}
-          </span>{" "}
-          executed
-        </span>
+      <div className="mt-6 flex flex-wrap items-center gap-x-8 gap-y-3 text-xs tabular-numbers text-zinc-500">
+        <Stat
+          n={(counters?.opportunitiesScanned ?? 0).toLocaleString()}
+          label="scanned"
+          tone="text-zinc-200"
+        />
+        <span className="text-zinc-700">·</span>
+        <Stat
+          n={(counters?.profitableDetected ?? 0).toLocaleString()}
+          label="profitable after fees"
+          tone="text-amber-400"
+        />
+        <span className="text-zinc-700">·</span>
+        <Stat
+          n={executedTrades.toLocaleString()}
+          label="executed"
+          tone="text-emerald-400"
+        />
       </div>
     </header>
+  );
+}
+
+function Stat({
+  n,
+  label,
+  tone,
+}: {
+  n: string;
+  label: string;
+  tone: string;
+}) {
+  return (
+    <span className="flex items-baseline gap-2">
+      <span className={`font-mono text-base font-medium ${tone}`}>{n}</span>
+      <span className="text-zinc-500">{label}</span>
+    </span>
   );
 }
 
@@ -306,13 +352,14 @@ function HeroStats({
 
 function DifferentiatorBanner() {
   return (
-    <div className="mb-8 rounded-lg border border-zinc-800 bg-gradient-to-r from-zinc-900 to-zinc-900/50 p-4">
-      <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:gap-4">
-        <span className="shrink-0 self-start rounded-full bg-emerald-500/10 px-2 py-1 text-xs font-medium uppercase tracking-wide text-emerald-400">
+    <div className="glass mb-10 rounded-2xl p-5 sm:p-6">
+      <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:gap-5">
+        <span className="shrink-0 self-start rounded-full border border-emerald-400/20 bg-emerald-400/10 px-3 py-1 text-xs font-semibold uppercase tracking-[0.16em] text-emerald-300">
           4-stack cost model
         </span>
-        <p className="text-sm text-zinc-400">
-          Faro discounts <span className="text-zinc-200">trading fees</span> +{" "}
+        <p className="text-sm leading-relaxed text-zinc-400 sm:text-[15px]">
+          Faro discounts{" "}
+          <span className="text-zinc-200">trading fees</span> +{" "}
           <span className="text-zinc-200">amortized withdrawal</span> +{" "}
           <span className="text-zinc-200">estimated slippage</span> +{" "}
           <span className="text-zinc-200">network latency</span> from every
@@ -336,36 +383,48 @@ function StatCard({
   subtitle?: string;
 }) {
   return (
-    <Card className="border-zinc-800 bg-zinc-900 text-zinc-50">
-      <CardContent className="pt-6">
-        <div className="text-xs font-medium uppercase tracking-wide text-zinc-500">
-          {label}
-        </div>
-        <div
-          className={`mt-2 font-mono text-2xl font-semibold tabular-nums lg:text-3xl ${valueClass}`}
-        >
-          {value}
-        </div>
-        {subtitle ? (
-          <div className="mt-1 text-xs text-zinc-500">{subtitle}</div>
-        ) : null}
-      </CardContent>
-    </Card>
+    <div className="glass rounded-2xl p-5 transition-colors hover:bg-white/[0.04]">
+      <div className="text-[10px] font-semibold uppercase tracking-[0.2em] text-zinc-500">
+        {label}
+      </div>
+      <div
+        className={`mt-3 font-mono text-3xl font-semibold tabular-numbers leading-none ${valueClass}`}
+      >
+        {value}
+      </div>
+      {subtitle ? (
+        <div className="mt-2 text-xs text-zinc-500">{subtitle}</div>
+      ) : null}
+    </div>
   );
 }
 
 function Section({
+  eyebrow,
   title,
+  subtitle,
   children,
 }: {
+  eyebrow?: string;
   title: string;
+  subtitle?: string;
   children: React.ReactNode;
 }) {
   return (
-    <section className="mb-10">
-      <h2 className="mb-3 text-sm font-medium uppercase tracking-wide text-zinc-500">
-        {title}
-      </h2>
+    <section className="mb-14 sm:mb-16">
+      <div className="mb-5">
+        {eyebrow ? (
+          <div className="mb-1 text-[10px] font-semibold uppercase tracking-[0.22em] text-emerald-400/80">
+            {eyebrow}
+          </div>
+        ) : null}
+        <h2 className="text-2xl font-semibold tracking-tight text-white sm:text-3xl">
+          {title}
+        </h2>
+        {subtitle ? (
+          <p className="mt-1 text-sm text-zinc-500">{subtitle}</p>
+        ) : null}
+      </div>
       {children}
     </section>
   );
@@ -392,7 +451,7 @@ function PairPanel({
         <h2 className="text-sm font-medium uppercase tracking-wide text-zinc-500">
           {PAIR_LABEL[pair]} · {pair}
         </h2>
-        <div className="font-mono text-xs tabular-nums text-zinc-500">
+        <div className="font-mono text-xs tabular-numbers text-zinc-500">
           <span className={profit >= 0 ? "text-emerald-400" : "text-red-400"}>
             {profit >= 0 ? "+" : ""}${profit.toFixed(2)}
           </span>{" "}
@@ -418,7 +477,7 @@ function PairPanel({
 function StrategyPanel({ stats }: { stats: PortfolioStats | undefined }) {
   if (!stats) {
     return (
-      <div className="rounded-lg border border-zinc-800 bg-zinc-900 p-6 text-sm text-zinc-500">
+      <div className="glass rounded-2xl p-6 text-sm text-zinc-500">
         Computing strategy metrics…
       </div>
     );
@@ -474,16 +533,16 @@ function MetricBox({
   valueClass: string;
 }) {
   return (
-    <div className="rounded-lg border border-zinc-800 bg-zinc-900 p-4">
-      <div className="text-xs uppercase tracking-wide text-zinc-500">
+    <div className="glass rounded-2xl p-5">
+      <div className="text-[10px] font-semibold uppercase tracking-[0.2em] text-zinc-500">
         {label}
       </div>
       <div
-        className={`mt-1 font-mono text-xl font-semibold tabular-nums ${valueClass}`}
+        className={`mt-2.5 font-mono text-2xl font-semibold tabular-numbers leading-none ${valueClass}`}
       >
         {value}
       </div>
-      <div className="mt-1 text-xs text-zinc-500">{subtitle}</div>
+      <div className="mt-2 text-xs text-zinc-500">{subtitle}</div>
     </div>
   );
 }
@@ -491,7 +550,7 @@ function MetricBox({
 function DecisionsPanel({ counters }: { counters: ScanCounters | undefined }) {
   if (!counters) {
     return (
-      <div className="rounded-lg border border-zinc-800 bg-zinc-900 p-6 text-sm text-zinc-500">
+      <div className="glass rounded-2xl p-6 text-sm text-zinc-500">
         —
       </div>
     );
@@ -528,12 +587,12 @@ function DecisionsPanel({ counters }: { counters: ScanCounters | undefined }) {
         color="text-zinc-400"
         subtitle="wallet exhausted"
       />
-      <div className="col-span-2 rounded-lg border border-zinc-800 bg-zinc-900 p-4 lg:col-span-4">
+      <div className="col-span-2 glass rounded-2xl p-4 lg:col-span-4">
         <div className="flex items-baseline justify-between">
           <div className="text-xs uppercase tracking-wide text-zinc-500">
             Total profitable opps skipped
           </div>
-          <div className="font-mono text-xs text-zinc-400 tabular-nums">
+          <div className="font-mono text-xs text-zinc-400 tabular-numbers">
             {totalSkipped.toLocaleString()} decisions
           </div>
         </div>
@@ -545,7 +604,7 @@ function DecisionsPanel({ counters }: { counters: ScanCounters | undefined }) {
 function RiskPanel({ risk }: { risk: RiskMetrics | undefined }) {
   if (!risk) {
     return (
-      <div className="rounded-lg border border-zinc-800 bg-zinc-900 p-6 text-sm text-zinc-500">
+      <div className="glass rounded-2xl p-6 text-sm text-zinc-500">
         Risk metrics initializing…
       </div>
     );
@@ -578,7 +637,7 @@ function RiskPanel({ risk }: { risk: RiskMetrics | undefined }) {
           valueClass="text-emerald-400"
         />
       </div>
-      <div className="rounded-lg border border-zinc-800 bg-zinc-900 p-4">
+      <div className="glass rounded-2xl p-4">
         <div className="mb-3 text-xs uppercase tracking-wide text-zinc-500">
           Exposure per exchange
         </div>
@@ -594,16 +653,16 @@ function RiskPanel({ risk }: { risk: RiskMetrics | undefined }) {
                   style={{ width: `${e.pctOfPortfolio * 100}%` }}
                 />
               </div>
-              <span className="w-20 text-right font-mono text-xs tabular-nums text-zinc-300">
+              <span className="w-20 text-right font-mono text-xs tabular-numbers text-zinc-300">
                 {(e.pctOfPortfolio * 100).toFixed(1)}%
               </span>
-              <span className="w-28 text-right font-mono text-xs tabular-nums text-zinc-500">
+              <span className="w-28 text-right font-mono text-xs tabular-numbers text-zinc-500">
                 $
                 {e.usdValue.toLocaleString("en-US", {
                   maximumFractionDigits: 0,
                 })}
               </span>
-              <span className="w-24 text-right font-mono text-[10px] tabular-nums text-zinc-600">
+              <span className="w-24 text-right font-mono text-[10px] tabular-numbers text-zinc-600">
                 {(e.usdtPct * 100).toFixed(0)}% USDT
               </span>
             </div>
@@ -617,20 +676,20 @@ function RiskPanel({ risk }: { risk: RiskMetrics | undefined }) {
 function DecisionsFeed({ decisions }: { decisions: Decision[] }) {
   if (decisions.length === 0) {
     return (
-      <div className="rounded-lg border border-zinc-800 bg-zinc-900 p-6 text-center text-sm text-zinc-500">
+      <div className="glass rounded-2xl p-6 text-center text-sm text-zinc-500">
         Decisions will appear here as the bot evaluates opportunities…
       </div>
     );
   }
   return (
-    <div className="overflow-x-auto rounded-lg border border-zinc-800 bg-zinc-900">
+    <div className="overflow-x-auto glass rounded-2xl">
       <div className="min-w-[640px] divide-y divide-zinc-800">
         {decisions.map((d, i) => (
           <div
             key={i}
             className="flex items-center gap-3 px-4 py-2 font-mono text-xs"
           >
-            <span className="w-16 text-zinc-500 tabular-nums">
+            <span className="w-16 text-zinc-500 tabular-numbers">
               {new Date(d.timestamp).toLocaleTimeString("en-US", {
                 hour12: false,
               })}
@@ -645,7 +704,7 @@ function DecisionsFeed({ decisions }: { decisions: Decision[] }) {
             </span>
             <span className="w-32 text-zinc-300">{d.route}</span>
             <span
-              className={`w-20 text-right tabular-nums ${d.outcome === "executed" ? "text-emerald-400" : "text-zinc-500"}`}
+              className={`w-20 text-right tabular-numbers ${d.outcome === "executed" ? "text-emerald-400" : "text-zinc-500"}`}
             >
               {d.netProfit >= 0 ? "+" : ""}${d.netProfit.toFixed(3)}
             </span>
@@ -660,7 +719,7 @@ function DecisionsFeed({ decisions }: { decisions: Decision[] }) {
 function CostBreakdown({ stats }: { stats: PortfolioStats | undefined }) {
   if (!stats || stats.totalTrades === 0) {
     return (
-      <div className="rounded-lg border border-zinc-800 bg-zinc-900 p-6 text-sm text-zinc-500">
+      <div className="glass rounded-2xl p-6 text-sm text-zinc-500">
         Cost breakdown appears after the first executed trade.
       </div>
     );
@@ -713,14 +772,16 @@ function CostBox({
   sub: string;
 }) {
   return (
-    <div className="rounded-lg border border-zinc-800 bg-zinc-900 p-3">
-      <div className="text-xs uppercase tracking-wide text-zinc-500">
+    <div className="glass rounded-2xl p-4">
+      <div className="text-[10px] font-semibold uppercase tracking-[0.2em] text-zinc-500">
         {label}
       </div>
-      <div className={`mt-1 font-mono text-lg font-semibold tabular-nums ${color}`}>
+      <div
+        className={`mt-2 font-mono text-xl font-semibold tabular-numbers leading-none ${color}`}
+      >
         ${value.toFixed(2)}
       </div>
-      <div className="mt-0.5 text-[10px] text-zinc-600">{sub}</div>
+      <div className="mt-1.5 text-[10px] text-zinc-600">{sub}</div>
     </div>
   );
 }
@@ -737,16 +798,16 @@ function SkipBox({
   subtitle: string;
 }) {
   return (
-    <div className="rounded-lg border border-zinc-800 bg-zinc-900 p-3">
-      <div className="text-xs uppercase tracking-wide text-zinc-500">
+    <div className="glass rounded-2xl p-4">
+      <div className="text-[10px] font-semibold uppercase tracking-[0.2em] text-zinc-500">
         {label}
       </div>
       <div
-        className={`mt-1 font-mono text-lg font-semibold tabular-nums ${color}`}
+        className={`mt-2 font-mono text-xl font-semibold tabular-numbers leading-none ${color}`}
       >
         {value.toLocaleString()}
       </div>
-      <div className="mt-0.5 text-[10px] text-zinc-600">{subtitle}</div>
+      <div className="mt-1.5 text-[10px] text-zinc-600">{subtitle}</div>
     </div>
   );
 }
@@ -765,7 +826,7 @@ function ExchangeCard({
   const isStale = ticker?.stale ?? false;
   return (
     <Card
-      className={`border-zinc-800 bg-zinc-900 text-zinc-50 ${isStale ? "opacity-50" : ""}`}
+      className={`glass !rounded-2xl text-zinc-50 ${isStale ? "opacity-50" : ""}`}
     >
       <CardHeader className="pb-2">
         <CardTitle className="flex items-center justify-between text-sm font-medium uppercase tracking-wide text-zinc-400">
@@ -783,7 +844,7 @@ function ExchangeCard({
           )}
         </CardTitle>
       </CardHeader>
-      <CardContent className="space-y-1 font-mono tabular-nums">
+      <CardContent className="space-y-1 font-mono tabular-numbers">
         <PriceRow
           label="bid"
           value={ticker?.bid}
@@ -867,17 +928,17 @@ function WalletCard({
     ? wallet.usdt + wallet.btc * btcPrice + wallet.eth * ethPrice
     : 0;
   return (
-    <Card className="border-zinc-800 bg-zinc-900 text-zinc-50">
+    <Card className="glass !rounded-2xl text-zinc-50">
       <CardHeader className="pb-2">
         <CardTitle className="flex items-center justify-between text-sm font-medium uppercase tracking-wide text-zinc-400">
           <span>{EXCHANGE_LABEL[exchange]}</span>
-          <span className="font-mono text-xs tabular-nums text-zinc-500 normal-case">
+          <span className="font-mono text-xs tabular-numbers text-zinc-500 normal-case">
             ≈ $
             {totalUsd.toLocaleString("en-US", { maximumFractionDigits: 0 })}
           </span>
         </CardTitle>
       </CardHeader>
-      <CardContent className="space-y-1 font-mono tabular-nums">
+      <CardContent className="space-y-1 font-mono tabular-numbers">
         <BalanceRow
           label="USDT"
           value={wallet?.usdt}
@@ -944,7 +1005,7 @@ function EquityCurve({ trades }: { trades: ExecutedTrade[] }) {
 
   if (data.length === 0) {
     return (
-      <div className="rounded-lg border border-zinc-800 bg-zinc-900 p-8 text-center text-sm text-zinc-500">
+      <div className="glass rounded-2xl p-8 text-center text-sm text-zinc-500">
         Equity curve will appear after the first executed trade.
       </div>
     );
@@ -955,13 +1016,13 @@ function EquityCurve({ trades }: { trades: ExecutedTrade[] }) {
   const lineColor = isPositive ? "#34d399" : "#f87171";
 
   return (
-    <div className="rounded-lg border border-zinc-800 bg-zinc-900 p-4">
+    <div className="glass rounded-2xl p-4">
       <div className="mb-2 flex items-baseline justify-between">
         <span className="text-xs uppercase tracking-wide text-zinc-500">
           Cumulative net P&amp;L · {data.length} trades
         </span>
         <span
-          className={`font-mono tabular-nums text-lg font-semibold ${
+          className={`font-mono tabular-numbers text-lg font-semibold ${
             isPositive ? "text-emerald-400" : "text-red-400"
           }`}
         >
@@ -1019,7 +1080,7 @@ function EquityCurve({ trades }: { trades: ExecutedTrade[] }) {
 function TradesTable({ trades }: { trades: ExecutedTrade[] }) {
   if (trades.length === 0) {
     return (
-      <div className="rounded-lg border border-zinc-800 bg-zinc-900 p-8 text-center text-sm text-zinc-500">
+      <div className="glass rounded-2xl p-8 text-center text-sm text-zinc-500">
         No trades executed yet. Faro is watching — only profitable opportunities
         AFTER fees get executed. Most candidates are mirages.
       </div>
@@ -1027,9 +1088,9 @@ function TradesTable({ trades }: { trades: ExecutedTrade[] }) {
   }
 
   return (
-    <div className="overflow-x-auto rounded-lg border border-zinc-800 bg-zinc-900">
+    <div className="overflow-x-auto glass rounded-2xl">
       <table className="w-full text-sm">
-        <thead className="bg-zinc-900/80 text-xs uppercase text-zinc-500">
+        <thead className="bg-white/[0.02] text-[10px] font-semibold uppercase tracking-[0.18em] text-zinc-500">
           <tr>
             <th className="px-4 py-3 text-left font-medium">Time</th>
             <th className="px-4 py-3 text-left font-medium">Pair</th>
@@ -1045,12 +1106,12 @@ function TradesTable({ trades }: { trades: ExecutedTrade[] }) {
             </th>
           </tr>
         </thead>
-        <tbody className="font-mono tabular-nums">
+        <tbody className="font-mono tabular-numbers">
           {trades.slice(0, 20).map((t) => {
             const asset = t.pair.split("/")[0];
             const costTooltip = `trading $${t.tradingFees.toFixed(3)} · withdrawal $${t.amortizedWithdrawal.toFixed(3)} · slippage $${t.estimatedSlippage.toFixed(3)} · latency $${t.latencyCost.toFixed(3)}`;
             return (
-              <tr key={t.id} className="border-t border-zinc-800">
+              <tr key={t.id} className="border-t border-white/[0.04]">
                 <td className="px-4 py-2 text-zinc-500">
                   {new Date(t.timestamp).toLocaleTimeString("en-US", {
                     hour12: false,
@@ -1100,16 +1161,16 @@ function TradesTable({ trades }: { trades: ExecutedTrade[] }) {
 function OpportunitiesTable({ opps }: { opps: Opportunity[] }) {
   if (opps.length === 0) {
     return (
-      <div className="rounded-lg border border-zinc-800 bg-zinc-900 p-6 text-center text-xs text-zinc-500">
+      <div className="glass rounded-2xl p-6 text-center text-xs text-zinc-500">
         Waiting for opportunities on this pair…
       </div>
     );
   }
 
   return (
-    <div className="overflow-x-auto rounded-lg border border-zinc-800 bg-zinc-900">
+    <div className="overflow-x-auto glass rounded-2xl">
       <table className="w-full text-sm">
-        <thead className="bg-zinc-900/80 text-xs uppercase text-zinc-500">
+        <thead className="bg-white/[0.02] text-[10px] font-semibold uppercase tracking-[0.18em] text-zinc-500">
           <tr>
             <th className="px-4 py-3 text-left font-medium">Time</th>
             <th className="px-4 py-3 text-left font-medium">Route</th>
@@ -1119,9 +1180,9 @@ function OpportunitiesTable({ opps }: { opps: Opportunity[] }) {
             <th className="px-4 py-3 text-right font-medium">Verdict</th>
           </tr>
         </thead>
-        <tbody className="font-mono tabular-nums">
+        <tbody className="font-mono tabular-numbers">
           {opps.slice(0, 8).map((o, i) => (
-            <tr key={i} className="border-t border-zinc-800">
+            <tr key={i} className="border-t border-white/[0.04]">
               <td className="px-4 py-2 text-zinc-500">
                 {new Date(o.timestamp).toLocaleTimeString("en-US", {
                   hour12: false,
@@ -1214,14 +1275,14 @@ function TriangularPanel({
       </div>
 
       {opps.length === 0 ? (
-        <div className="rounded-lg border border-zinc-800 bg-zinc-900 p-6 text-center text-sm text-zinc-500">
+        <div className="glass rounded-2xl p-6 text-center text-sm text-zinc-500">
           Waiting for full triangle (BTC/USDT + ETH/USDT + ETH/BTC) on at
           least one exchange…
         </div>
       ) : (
-        <div className="overflow-x-auto rounded-lg border border-zinc-800 bg-zinc-900">
+        <div className="overflow-x-auto glass rounded-2xl">
           <table className="w-full text-sm">
-            <thead className="bg-zinc-900/80 text-xs uppercase text-zinc-500">
+            <thead className="bg-white/[0.02] text-[10px] font-semibold uppercase tracking-[0.18em] text-zinc-500">
               <tr>
                 <th className="px-4 py-3 text-left font-medium">Time</th>
                 <th className="px-4 py-3 text-left font-medium">Exchange</th>
@@ -1233,9 +1294,9 @@ function TriangularPanel({
                 <th className="px-4 py-3 text-right font-medium">Verdict</th>
               </tr>
             </thead>
-            <tbody className="font-mono tabular-nums">
+            <tbody className="font-mono tabular-numbers">
               {opps.slice(0, 12).map((o, i) => (
-                <tr key={i} className="border-t border-zinc-800">
+                <tr key={i} className="border-t border-white/[0.04]">
                   <td className="px-4 py-2 text-zinc-500">
                     {new Date(o.timestamp).toLocaleTimeString("en-US", {
                       hour12: false,
@@ -1284,7 +1345,7 @@ function TriangularPanel({
       )}
 
       {trades.length > 0 ? (
-        <div className="overflow-x-auto rounded-lg border border-emerald-500/20 bg-emerald-500/5">
+        <div className="overflow-x-auto rounded-2xl border border-emerald-400/20 bg-emerald-400/[0.03]">
           <div className="px-4 py-2 text-xs font-medium uppercase tracking-wide text-emerald-400">
             Executed triangular trades
           </div>
@@ -1298,9 +1359,9 @@ function TriangularPanel({
                 <th className="px-4 py-2 text-right font-medium">Fees</th>
               </tr>
             </thead>
-            <tbody className="font-mono tabular-nums">
+            <tbody className="font-mono tabular-numbers">
               {trades.slice(0, 10).map((t) => (
-                <tr key={t.id} className="border-t border-zinc-800">
+                <tr key={t.id} className="border-t border-white/[0.04]">
                   <td className="px-4 py-2 text-zinc-500">
                     {new Date(t.timestamp).toLocaleTimeString("en-US", {
                       hour12: false,
@@ -1328,7 +1389,7 @@ function TriangularPanel({
 
 function Footer() {
   return (
-    <footer className="mt-12 space-y-2 border-t border-zinc-800 pt-6 text-xs text-zinc-500">
+    <footer className="mt-12 space-y-2 border-t border-white/[0.04] pt-6 text-xs text-zinc-500">
       <p>
         Faro models market-maker tier (taker{" "}
         <span className="font-mono">0.02–0.04%</span>, accessible to operators
