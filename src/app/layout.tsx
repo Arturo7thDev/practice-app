@@ -13,9 +13,9 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "Faro · Honest crypto arbitrage",
+  title: "Faro · Arbitraje cripto honesto",
   description:
-    "Real-time linear and triangular BTC + ETH arbitrage bot with full cost model. Built for Coding Challenge Mexico 2026.",
+    "Bot de arbitraje BTC + ETH en tiempo real, lineal y triangular, con modelo de costos completo. Hecho para el Coding Challenge Mexico 2026.",
 };
 
 export default function RootLayout({
