@@ -1,5 +1,6 @@
 "use client";
 
+import { useEffect, useRef, useState } from "react";
 import {
   LINEAR_PAIRS,
   useFaroStream,
@@ -294,17 +295,27 @@ function Hero({
   btcPrice: number;
   ethPrice: number;
 }) {
+  const scansPerSec = useThroughput(counters?.opportunitiesScanned);
   return (
     <header className="relative mb-16 pt-4 sm:pt-8">
       <FloatingNetwork className="pointer-events-none absolute inset-0 -z-10 opacity-50" />
       <div className="relative">
-        <div className="mb-6 inline-flex items-center gap-2 rounded-full border border-white/10 bg-white/5 px-3 py-1.5 text-xs font-medium text-zinc-300 backdrop-blur">
+        <div className="mb-6 inline-flex flex-wrap items-center gap-2 rounded-full border border-white/10 bg-white/5 px-3 py-1.5 text-xs font-medium text-zinc-300 backdrop-blur">
           <span
             className={`live-dot inline-block h-1.5 w-1.5 rounded-full ${
               connected ? "bg-emerald-400" : "bg-zinc-600"
             }`}
           />
-          {connected ? "en vivo" : "conectando…"}
+          <span>{connected ? "en vivo" : "conectando…"}</span>
+          {connected && (
+            <>
+              <span className="text-zinc-700">·</span>
+              <span className="font-mono tabular-numbers text-zinc-400">
+                {scansPerSec.toFixed(1)}
+                <span className="ml-0.5 text-zinc-600">scans/s</span>
+              </span>
+            </>
+          )}
         </div>
 
         <div className="flex flex-col gap-8 lg:flex-row lg:items-start lg:gap-12">
@@ -455,6 +466,22 @@ function FloatingNetwork({ className }: { className?: string }) {
   );
 }
 
+/** Detecta cambios en `value` y devuelve true por 600ms. Sirve para gatillar
+ *  un highlight visual cuando una métrica cambia. */
+function usePulseOnChange<T>(value: T): boolean {
+  const [pulsing, setPulsing] = useState(false);
+  const previousRef = useRef<T>(value);
+  useEffect(() => {
+    if (previousRef.current !== value) {
+      previousRef.current = value;
+      setPulsing(true);
+      const id = setTimeout(() => setPulsing(false), 600);
+      return () => clearTimeout(id);
+    }
+  }, [value]);
+  return pulsing;
+}
+
 function Stat({
   n,
   label,
@@ -464,12 +491,41 @@ function Stat({
   label: string;
   tone: string;
 }) {
+  const pulse = usePulseOnChange(n);
   return (
     <span className="flex items-baseline gap-2">
-      <span className={`font-mono text-base font-medium ${tone}`}>{n}</span>
+      <span
+        className={`font-mono text-base font-medium ${tone} ${pulse ? "value-flash" : ""}`}
+      >
+        {n}
+      </span>
       <span className="text-zinc-500">{label}</span>
     </span>
   );
+}
+
+/** Calcula scans/seg basado en el delta de `opportunitiesScanned` sobre una
+ *  ventana móvil de los últimos N snapshots SSE. */
+function useThroughput(opportunitiesScanned: number | undefined): number {
+  const samplesRef = useRef<Array<{ ts: number; scans: number }>>([]);
+  const [rate, setRate] = useState(0);
+  useEffect(() => {
+    if (opportunitiesScanned === undefined) return;
+    const now = Date.now();
+    const samples = samplesRef.current;
+    samples.push({ ts: now, scans: opportunitiesScanned });
+    // Mantener ventana de los últimos 5s
+    const cutoff = now - 5000;
+    while (samples.length > 0 && samples[0].ts < cutoff) samples.shift();
+    if (samples.length >= 2) {
+      const first = samples[0];
+      const last = samples[samples.length - 1];
+      const elapsedSec = (last.ts - first.ts) / 1000;
+      const deltaScans = last.scans - first.scans;
+      setRate(elapsedSec > 0 ? deltaScans / elapsedSec : 0);
+    }
+  }, [opportunitiesScanned]);
+  return rate;
 }
 
 function HeroStats({
