@@ -256,7 +256,7 @@ function Hero({
               connected ? "bg-emerald-400" : "bg-zinc-600"
             }`}
           />
-          {connected ? "en vivo en producción" : "conectando…"}
+          {connected ? "en vivo" : "conectando…"}
         </div>
 
         <div className="flex flex-col gap-8 lg:flex-row lg:items-start lg:gap-12">
