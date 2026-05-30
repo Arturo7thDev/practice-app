@@ -73,11 +73,11 @@ const DECISION_COLOR: Record<Decision["outcome"], string> = {
 };
 
 const DECISION_LABEL: Record<Decision["outcome"], string> = {
-  executed: "EXECUTED",
+  executed: "EJECUTADO",
   cooldown: "COOLDOWN",
-  stale: "STALE",
-  suspicious: "SUSPICIOUS",
-  insufficient_capital: "NO CAPITAL",
+  stale: "DATA VIEJA",
+  suspicious: "SOSPECHOSO",
+  insufficient_capital: "SIN CAPITAL",
 };
 
 export default function Home() {
@@ -100,45 +100,45 @@ export default function Home() {
 
         <Section
           icon={Brain}
-          eyebrow="Intelligence"
-          title="Strategy"
-          subtitle="Aggregated performance metrics across all executions"
+          eyebrow="Inteligencia"
+          title="Estrategia"
+          subtitle="Métricas agregadas de performance en todas las ejecuciones"
         >
           <StrategyPanel stats={state?.stats} />
         </Section>
 
         <Section
           icon={Gauge}
-          eyebrow="Process"
-          title="Bot decisions"
-          subtitle="Every profitable opportunity classified by outcome"
+          eyebrow="Proceso"
+          title="Decisiones del bot"
+          subtitle="Cada oportunidad rentable clasificada por veredicto"
         >
           <DecisionsPanel counters={state?.counters} />
         </Section>
 
         <Section
           icon={ShieldCheck}
-          eyebrow="The truth"
-          title="Full cost breakdown"
-          subtitle="Trading + amortized withdrawal + estimated slippage + network latency"
+          eyebrow="La verdad"
+          title="Desglose completo de costos"
+          subtitle="Trading + retiro amortizado + slippage estimado + latencia de red"
         >
           <CostBreakdown stats={state?.stats} />
         </Section>
 
         <Section
           icon={AlertTriangle}
-          eyebrow="Risk"
-          title="Risk metrics"
-          subtitle="Drawdown, exposure, wallet imbalance, circuit breaker"
+          eyebrow="Riesgo"
+          title="Métricas de riesgo"
+          subtitle="Drawdown, exposición, desbalance de wallet, circuit breaker"
         >
           <RiskPanel risk={state?.stats.risk} />
         </Section>
 
         <Section
           icon={Radio}
-          eyebrow="Real-time"
-          title="Live decisions"
-          subtitle="Last 15 evaluations with full reasoning"
+          eyebrow="Tiempo real"
+          title="Decisiones en vivo"
+          subtitle="Últimas 15 evaluaciones con razonamiento completo"
         >
           <DecisionsFeed decisions={state?.decisions ?? []} />
         </Section>
@@ -146,8 +146,8 @@ export default function Home() {
         <Section
           icon={TrendingUp}
           eyebrow="Performance"
-          title="Equity curve"
-          subtitle="Cumulative net P&L across both pairs"
+          title="Curva de equity"
+          subtitle="P&L neto acumulado a través de ambos pares"
         >
           <EquityCurve trades={state?.executedTrades ?? []} />
         </Section>
@@ -155,8 +155,8 @@ export default function Home() {
         <Section
           icon={Coins}
           eyebrow="Capital"
-          title="Wallet balances"
-          subtitle="Initial: $50K USDT + 0.5 BTC + 10 ETH per exchange"
+          title="Balances de wallets"
+          subtitle="Inicial: $50K USDT + 0.5 BTC + 10 ETH por exchange"
         >
           <div className="grid grid-cols-1 gap-4 md:grid-cols-3">
             {EXCHANGES.map((ex) => (
@@ -185,18 +185,18 @@ export default function Home() {
 
         <Section
           icon={BookOpen}
-          eyebrow="Ledger"
-          title="Executed trades"
-          subtitle="Faro (institutional fees) vs Retail (0.5%) on every trade"
+          eyebrow="Libro mayor"
+          title="Trades ejecutados"
+          subtitle="Faro (fees institucionales) vs Retail (0.5%) en cada trade"
         >
           <TradesTable trades={state?.executedTrades ?? []} />
         </Section>
 
         <Section
           icon={Sparkles}
-          eyebrow="Advanced"
-          title="Triangular arbitrage"
-          subtitle="Within-exchange BTC ↔ ETH ↔ USDT cycles, both directions"
+          eyebrow="Avanzado"
+          title="Arbitraje triangular"
+          subtitle="Ciclos intra-exchange BTC ↔ ETH ↔ USDT, ambas direcciones"
         >
           <TriangularPanel
             opps={state?.triangularOpportunities ?? []}
@@ -233,41 +233,41 @@ function Hero({
               connected ? "bg-emerald-400" : "bg-zinc-600"
             }`}
           />
-          {connected ? "live in production" : "connecting…"}
+          {connected ? "en vivo en producción" : "conectando…"}
         </div>
 
         <div className="flex flex-col gap-8 lg:flex-row lg:items-start lg:gap-12">
           <div className="flex-1">
             <h1 className="text-5xl font-semibold leading-[1.05] tracking-tight text-white sm:text-6xl lg:text-7xl">
-              Honest crypto<br />
+              Arbitraje cripto<br />
               <span className="bg-gradient-to-r from-emerald-300 via-emerald-400 to-teal-300 bg-clip-text text-transparent">
-                arbitrage.
+                honesto.
               </span>
             </h1>
             <p className="mt-6 max-w-2xl text-base leading-relaxed text-zinc-400 sm:text-lg">
-              Real-time linear AND triangular arbitrage across{" "}
-              <span className="text-zinc-200">3 exchanges</span> and{" "}
-              <span className="text-zinc-200">2 pairs</span>. Executes only
-              what survives the full cost stack — fees, slippage, withdrawal,
-              latency. Built for the operators that care about what actually
-              ends up in their wallet.
+              Arbitraje en tiempo real, lineal y triangular, entre{" "}
+              <span className="text-zinc-200">3 exchanges</span> y{" "}
+              <span className="text-zinc-200">2 pares</span>. Solo ejecuta lo
+              que sobrevive el costo completo — fees, slippage, retiros y
+              latencia. Hecho para operadores que sí miran lo que de verdad
+              termina en su wallet.
             </p>
             <div className="mt-8 flex flex-wrap items-center gap-x-8 gap-y-3 text-sm text-zinc-500">
               <Stat
                 n={(counters?.opportunitiesScanned ?? 0).toLocaleString()}
-                label="opportunities scanned"
+                label="oportunidades escaneadas"
                 tone="text-zinc-200"
               />
               <span className="text-zinc-700">·</span>
               <Stat
                 n={(counters?.profitableDetected ?? 0).toLocaleString()}
-                label="profitable after fees"
+                label="rentables tras fees"
                 tone="text-amber-400"
               />
               <span className="text-zinc-700">·</span>
               <Stat
                 n={executedTrades.toLocaleString()}
-                label="trades executed"
+                label="trades ejecutados"
                 tone="text-emerald-400"
               />
             </div>
@@ -293,7 +293,7 @@ function LiveTicker({
     <div className="glass-strong rounded-3xl p-6">
       <div className="mb-4 flex items-center justify-between">
         <span className="text-[10px] font-semibold uppercase tracking-[0.22em] text-zinc-500">
-          Live mid prices
+          Precios mid en vivo
         </span>
         <Network className="h-4 w-4 text-emerald-400" />
       </div>
@@ -424,7 +424,7 @@ function HeroStats({
   return (
     <section className="mb-10 grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-5">
       <StatCard
-        label="Faro profit"
+        label="Ganancia Faro"
         value={
           stats ? `${profit >= 0 ? "+" : ""}$${profit.toFixed(2)}` : "—"
         }
@@ -440,11 +440,11 @@ function HeroStats({
         subtitle={
           stats
             ? `${stats.totalTrades} trades · BTC ${stats.tradesByPair["BTC/USDT"]} · ETH ${stats.tradesByPair["ETH/USDT"]}`
-            : "Waiting for data…"
+            : "Esperando datos…"
         }
       />
       <StatCard
-        label="Same at retail (0.5%)"
+        label="Mismas trades en retail (0.5%)"
         value={
           stats
             ? `${retailLoss >= 0 ? "+" : ""}$${retailLoss.toFixed(2)}`
@@ -457,26 +457,26 @@ function HeroStats({
               : "text-zinc-400"
             : "text-zinc-600"
         }
-        subtitle="What a retail bot would yield"
+        subtitle="Lo que daría un bot retail"
       />
       <StatCard
-        label="Decision accuracy"
+        label="Precisión de decisión"
         value={counters ? `${captureRate.toFixed(0)}%` : "—"}
         valueClass="text-emerald-400"
         subtitle={
           counters
-            ? `captured · ${safePct.toFixed(0)}% safety · ${throttlePct.toFixed(0)}% throttled`
-            : "of profitable opps"
+            ? `capturadas · ${safePct.toFixed(0)}% seguridad · ${throttlePct.toFixed(0)}% throttle`
+            : "de oportunidades rentables"
         }
       />
       <StatCard
-        label="Lost to cooldown"
+        label="Perdido por cooldown"
         value={counters ? `$${lostOpp.toFixed(2)}` : "—"}
         valueClass="text-amber-400"
-        subtitle="Profit blocked by 3s throttle"
+        subtitle="Ganancia bloqueada por throttle de 3s"
       />
       <StatCard
-        label="Portfolio value"
+        label="Valor del portfolio"
         value={
           stats
             ? `$${stats.currentPortfolioValueUSDT.toLocaleString("en-US", {
@@ -487,7 +487,7 @@ function HeroStats({
         valueClass="text-zinc-50"
         subtitle={
           stats
-            ? `$${stats.initialCapitalUSDT.toLocaleString()} + ${stats.initialBTC} BTC + ${stats.initialETH} ETH`
+            ? `Inicial: $${stats.initialCapitalUSDT.toLocaleString()} + ${stats.initialBTC} BTC + ${stats.initialETH} ETH`
             : ""
         }
       />
@@ -500,16 +500,16 @@ function DifferentiatorBanner() {
     <div className="glass mb-10 rounded-2xl p-5 sm:p-6">
       <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:gap-5">
         <span className="shrink-0 self-start rounded-full border border-emerald-400/20 bg-emerald-400/10 px-3 py-1 text-xs font-semibold uppercase tracking-[0.16em] text-emerald-300">
-          4-stack cost model
+          Modelo de costos 4-stack
         </span>
         <p className="text-sm leading-relaxed text-zinc-400 sm:text-[15px]">
-          Faro discounts{" "}
-          <span className="text-zinc-200">trading fees</span> +{" "}
-          <span className="text-zinc-200">amortized withdrawal</span> +{" "}
-          <span className="text-zinc-200">estimated slippage</span> +{" "}
-          <span className="text-zinc-200">network latency</span> from every
-          opportunity. Most arbitrage bots only count trading fees — that&apos;s
-          why their &ldquo;profit&rdquo; vanishes in reality.
+          Faro descuenta{" "}
+          <span className="text-zinc-200">fees de trading</span> +{" "}
+          <span className="text-zinc-200">retiro amortizado</span> +{" "}
+          <span className="text-zinc-200">slippage estimado</span> +{" "}
+          <span className="text-zinc-200">latencia de red</span> en cada
+          oportunidad. La mayoría de bots solo cuentan fees de trading — por
+          eso sus &ldquo;ganancias&rdquo; se desvanecen en la realidad.
         </p>
       </div>
     </div>
@@ -632,7 +632,7 @@ function StrategyPanel({ stats }: { stats: PortfolioStats | undefined }) {
   if (!stats) {
     return (
       <div className="glass rounded-2xl p-6 text-sm text-zinc-500">
-        Computing strategy metrics…
+        Calculando métricas de estrategia…
       </div>
     );
   }
@@ -644,31 +644,31 @@ function StrategyPanel({ stats }: { stats: PortfolioStats | undefined }) {
   return (
     <div className="grid grid-cols-2 gap-4 lg:grid-cols-4">
       <MetricBox
-        label="Success rate"
+        label="Tasa de éxito"
         value={`${successPct}%`}
-        subtitle="profitable / scanned"
+        subtitle="rentables / escaneadas"
         valueClass="text-emerald-400"
       />
       <MetricBox
-        label="Avg net / trade"
+        label="Neto promedio / trade"
         value={
           stats.totalTrades > 0
             ? `${avgNet >= 0 ? "+" : ""}$${avgNet.toFixed(4)}`
             : "—"
         }
-        subtitle={`${stats.totalTrades} executed`}
+        subtitle={`${stats.totalTrades} ejecutadas`}
         valueClass={avgNet >= 0 ? "text-emerald-400" : "text-red-400"}
       />
       <MetricBox
-        label="Best route"
+        label="Mejor ruta"
         value={best ? `+$${best.totalProfit.toFixed(2)}` : "—"}
-        subtitle={best ? `${best.route} · ${best.count} trades` : "no data"}
+        subtitle={best ? `${best.route} · ${best.count} trades` : "sin datos"}
         valueClass="text-emerald-400"
       />
       <MetricBox
-        label="Eval latency"
+        label="Latencia eval"
         value={`${latency.toFixed(2)} ms`}
-        subtitle="avg per ticker processed"
+        subtitle="promedio por ticker procesado"
         valueClass="text-zinc-100"
       />
     </div>
@@ -721,33 +721,33 @@ function DecisionsPanel({ counters }: { counters: ScanCounters | undefined }) {
         label="Cooldown"
         value={counters.skippedCooldown}
         color="text-amber-400"
-        subtitle="5s per pair throttle"
+        subtitle="throttle 3s por par"
       />
       <SkipBox
-        label="Suspicious"
+        label="Sospechosa"
         value={counters.skippedSuspicious}
         color="text-red-400"
         subtitle="spread > 2% (circuit breaker)"
       />
       <SkipBox
-        label="Stale data"
+        label="Data vieja"
         value={counters.skippedStaleData}
         color="text-zinc-400"
-        subtitle="ticker > 10s old"
+        subtitle="ticker > 60s viejo"
       />
       <SkipBox
-        label="No capital"
+        label="Sin capital"
         value={counters.skippedInsufficientCapital}
         color="text-zinc-400"
-        subtitle="wallet exhausted"
+        subtitle="wallet agotado"
       />
       <div className="col-span-2 glass rounded-2xl p-4 lg:col-span-4">
         <div className="flex items-baseline justify-between">
           <div className="text-xs uppercase tracking-wide text-zinc-500">
-            Total profitable opps skipped
+            Total de rentables descartadas
           </div>
           <div className="font-mono text-xs text-zinc-400 tabular-numbers">
-            {totalSkipped.toLocaleString()} decisions
+            {totalSkipped.toLocaleString()} decisiones
           </div>
         </div>
       </div>
@@ -759,7 +759,7 @@ function RiskPanel({ risk }: { risk: RiskMetrics | undefined }) {
   if (!risk) {
     return (
       <div className="glass rounded-2xl p-6 text-sm text-zinc-500">
-        Risk metrics initializing…
+        Inicializando métricas de riesgo…
       </div>
     );
   }
@@ -767,33 +767,33 @@ function RiskPanel({ risk }: { risk: RiskMetrics | undefined }) {
     <div className="space-y-4">
       <div className="grid grid-cols-2 gap-3 lg:grid-cols-4">
         <MetricBox
-          label="Max drawdown"
+          label="Drawdown máximo"
           value={`$${risk.maxDrawdownUSD.toFixed(2)}`}
-          subtitle={`${(risk.maxDrawdownPercent * 100).toFixed(1)}% from peak`}
+          subtitle={`${(risk.maxDrawdownPercent * 100).toFixed(1)}% desde el peak`}
           valueClass={risk.maxDrawdownUSD > 0 ? "text-red-400" : "text-emerald-400"}
         />
         <MetricBox
-          label="Wallet imbalance"
+          label="Desbalance de wallet"
           value={`${(risk.walletImbalance * 100).toFixed(1)}%`}
-          subtitle="std dev / mean of USD/exchange"
+          subtitle="desv std / media de USD/exchange"
           valueClass={risk.walletImbalance > 0.2 ? "text-amber-400" : "text-emerald-400"}
         />
         <MetricBox
-          label="Capital deployed"
+          label="Capital desplegado"
           value={`${(risk.capitalDeployedPercent * 100).toFixed(1)}%`}
-          subtitle="trade vol / initial USDT"
+          subtitle="vol trade / USDT inicial"
           valueClass="text-zinc-100"
         />
         <MetricBox
           label="Circuit breaker"
-          value="ACTIVE"
-          subtitle="rejects spreads > 2%"
+          value="ACTIVO"
+          subtitle="rechaza spreads > 2%"
           valueClass="text-emerald-400"
         />
       </div>
       <div className="glass rounded-2xl p-4">
         <div className="mb-3 text-xs uppercase tracking-wide text-zinc-500">
-          Exposure per exchange
+          Exposición por exchange
         </div>
         <div className="space-y-2">
           {risk.exposureByExchange.map((e) => (
@@ -816,8 +816,8 @@ function RiskPanel({ risk }: { risk: RiskMetrics | undefined }) {
                   maximumFractionDigits: 0,
                 })}
               </span>
-              <span className="w-24 text-right font-mono text-[10px] tabular-numbers text-zinc-600">
-                {(e.usdtPct * 100).toFixed(0)}% USDT
+              <span className="w-28 text-right font-mono text-[10px] tabular-numbers text-zinc-600">
+                {(e.usdtPct * 100).toFixed(0)}% en USDT
               </span>
             </div>
           ))}
@@ -831,7 +831,7 @@ function DecisionsFeed({ decisions }: { decisions: Decision[] }) {
   if (decisions.length === 0) {
     return (
       <div className="glass rounded-2xl p-6 text-center text-sm text-zinc-500">
-        Decisions will appear here as the bot evaluates opportunities…
+        Las decisiones van a aparecer acá a medida que el bot evalúe oportunidades…
       </div>
     );
   }
@@ -881,34 +881,34 @@ function CostBreakdown({ stats }: { stats: PortfolioStats | undefined }) {
   return (
     <div className="grid grid-cols-2 gap-3 lg:grid-cols-5">
       <CostBox
-        label="Trading fees"
+        label="Fees de trading"
         value={stats.totalTradingFees}
         color="text-red-400"
-        sub="taker × 2 sides"
+        sub="taker × 2 lados"
       />
       <CostBox
-        label="Withdrawal (amortized)"
+        label="Retiro (amortizado)"
         value={stats.totalAmortizedWithdrawal}
         color="text-amber-400"
         sub="÷ 100 trades/rebalance"
       />
       <CostBox
-        label="Estimated slippage"
+        label="Slippage estimado"
         value={stats.totalEstimatedSlippage}
         color="text-amber-400"
-        sub="0.002% × trade value"
+        sub="0.002% × valor del trade"
       />
       <CostBox
-        label="Latency cost"
+        label="Costo de latencia"
         value={stats.totalLatencyCost}
         color="text-amber-400"
-        sub="0.001% × trade value"
+        sub="0.001% × valor del trade"
       />
       <CostBox
-        label="Total all-in cost"
+        label="Costo total all-in"
         value={stats.totalCosts}
         color="text-zinc-100"
-        sub="what survives = NET"
+        sub="lo que sobrevive = NETO"
       />
     </div>
   );
@@ -987,7 +987,7 @@ function ExchangeCard({
           <span>{EXCHANGE_LABEL[exchange]}</span>
           {isStale ? (
             <span className="rounded-full bg-amber-500/10 px-2 py-0.5 text-xs font-medium normal-case text-amber-400">
-              stale · {ticker ? `${(ticker.ageMs / 1000).toFixed(0)}s ago` : ""}
+              data vieja · {ticker ? `hace ${(ticker.ageMs / 1000).toFixed(0)}s` : ""}
             </span>
           ) : (
             <span
@@ -1016,7 +1016,7 @@ function ExchangeCard({
           </span>
           {exchangeStats ? (
             <span className="flex items-center gap-2">
-              <span title="WebSocket message rate">
+              <span title="Tasa de mensajes WebSocket">
                 <span className="text-zinc-300">
                   {exchangeStats.ticksPerSecond.toFixed(1)}
                 </span>{" "}
@@ -1024,7 +1024,7 @@ function ExchangeCard({
               </span>
               {exchangeStats.networkLatencyMs > 0 ? (
                 <span
-                  title="Measured network RTT via REST ping every 30s"
+                  title="RTT real medido vía REST ping cada 30s"
                   className="border-l border-zinc-700 pl-2"
                 >
                   <span className="text-zinc-300">
@@ -1160,7 +1160,7 @@ function EquityCurve({ trades }: { trades: ExecutedTrade[] }) {
   if (data.length === 0) {
     return (
       <div className="glass rounded-2xl p-8 text-center text-sm text-zinc-500">
-        Equity curve will appear after the first executed trade.
+        La curva de equity aparecerá tras el primer trade ejecutado.
       </div>
     );
   }
@@ -1173,7 +1173,7 @@ function EquityCurve({ trades }: { trades: ExecutedTrade[] }) {
     <div className="glass rounded-2xl p-4">
       <div className="mb-2 flex items-baseline justify-between">
         <span className="text-xs uppercase tracking-wide text-zinc-500">
-          Cumulative net P&amp;L · {data.length} trades
+          P&amp;L neto acumulado · {data.length} trades
         </span>
         <span
           className={`font-mono tabular-numbers text-lg font-semibold ${
@@ -1213,7 +1213,7 @@ function EquityCurve({ trades }: { trades: ExecutedTrade[] }) {
               labelStyle={{ color: "#a1a1aa" }}
               formatter={(value) => [
                 `$${Number(value).toFixed(2)}`,
-                "Cumulative P&L",
+                "P&L acumulado",
               ]}
             />
             <ReferenceLine y={0} stroke="#52525b" strokeDasharray="4 4" />
@@ -1235,8 +1235,8 @@ function TradesTable({ trades }: { trades: ExecutedTrade[] }) {
   if (trades.length === 0) {
     return (
       <div className="glass rounded-2xl p-8 text-center text-sm text-zinc-500">
-        No trades executed yet. Faro is watching — only profitable opportunities
-        AFTER fees get executed. Most candidates are mirages.
+        Aún no se ejecutan trades. Faro observa — solo ejecuta oportunidades
+        rentables DESPUÉS de fees. La mayoría son espejismos.
       </div>
     );
   }
@@ -1246,17 +1246,17 @@ function TradesTable({ trades }: { trades: ExecutedTrade[] }) {
       <table className="w-full text-sm">
         <thead className="bg-white/[0.02] text-[10px] font-semibold uppercase tracking-[0.18em] text-zinc-500">
           <tr>
-            <th className="px-4 py-3 text-left font-medium">Time</th>
-            <th className="px-4 py-3 text-left font-medium">Pair</th>
-            <th className="px-4 py-3 text-left font-medium">Route</th>
+            <th className="px-4 py-3 text-left font-medium">Hora</th>
+            <th className="px-4 py-3 text-left font-medium">Par</th>
+            <th className="px-4 py-3 text-left font-medium">Ruta</th>
             <th className="px-4 py-3 text-right font-medium">Vol</th>
-            <th className="px-4 py-3 text-right font-medium">Gross</th>
-            <th className="px-4 py-3 text-right font-medium">All-in cost</th>
+            <th className="px-4 py-3 text-right font-medium">Bruto</th>
+            <th className="px-4 py-3 text-right font-medium">Costo all-in</th>
             <th className="px-4 py-3 text-right font-medium">
-              Faro net (inst)
+              Neto Faro (inst)
             </th>
             <th className="px-4 py-3 text-right font-medium">
-              Net at retail
+              Neto en retail
             </th>
           </tr>
         </thead>
@@ -1316,7 +1316,7 @@ function OpportunitiesTable({ opps }: { opps: Opportunity[] }) {
   if (opps.length === 0) {
     return (
       <div className="glass rounded-2xl p-6 text-center text-xs text-zinc-500">
-        Waiting for opportunities on this pair…
+        Esperando oportunidades en este par…
       </div>
     );
   }
@@ -1326,12 +1326,12 @@ function OpportunitiesTable({ opps }: { opps: Opportunity[] }) {
       <table className="w-full text-sm">
         <thead className="bg-white/[0.02] text-[10px] font-semibold uppercase tracking-[0.18em] text-zinc-500">
           <tr>
-            <th className="px-4 py-3 text-left font-medium">Time</th>
-            <th className="px-4 py-3 text-left font-medium">Route</th>
-            <th className="px-4 py-3 text-right font-medium">Gross</th>
-            <th className="px-4 py-3 text-right font-medium">Net (inst)</th>
-            <th className="px-4 py-3 text-right font-medium">Net (retail)</th>
-            <th className="px-4 py-3 text-right font-medium">Verdict</th>
+            <th className="px-4 py-3 text-left font-medium">Hora</th>
+            <th className="px-4 py-3 text-left font-medium">Ruta</th>
+            <th className="px-4 py-3 text-right font-medium">Bruto</th>
+            <th className="px-4 py-3 text-right font-medium">Neto (inst)</th>
+            <th className="px-4 py-3 text-right font-medium">Neto (retail)</th>
+            <th className="px-4 py-3 text-right font-medium">Veredicto</th>
           </tr>
         </thead>
         <tbody className="font-mono tabular-numbers">
@@ -1362,7 +1362,7 @@ function OpportunitiesTable({ opps }: { opps: Opportunity[] }) {
               <td className="px-4 py-2 text-right">
                 {o.suspicious ? (
                   <span className="rounded-full bg-amber-500/10 px-2 py-1 text-xs font-medium text-amber-400">
-                    SUSPICIOUS
+                    SOSPECHOSA
                   </span>
                 ) : o.profitable ? (
                   <span className="rounded-full bg-emerald-500/10 px-2 py-1 text-xs font-medium text-emerald-400">
@@ -1397,27 +1397,27 @@ function TriangularPanel({
     <div className="space-y-4">
       <div className="grid grid-cols-2 gap-3 lg:grid-cols-4">
         <MetricBox
-          label="Triangular cycles tracked"
+          label="Ciclos triangulares evaluados"
           value={scanned.toString()}
-          subtitle="last 12 evaluated"
+          subtitle="últimos 12 evaluados"
           valueClass="text-zinc-100"
         />
         <MetricBox
-          label="Profitable detected"
+          label="Rentables detectadas"
           value={profitable.toString()}
           subtitle={`${scanned > 0 ? ((profitable / scanned) * 100).toFixed(0) : 0}% hit rate`}
           valueClass={profitable > 0 ? "text-emerald-400" : "text-zinc-400"}
         />
         <MetricBox
-          label="Triangular trades executed"
+          label="Trades triangulares ejecutados"
           value={trades.length.toString()}
-          subtitle="within single exchange"
+          subtitle="dentro de un solo exchange"
           valueClass={trades.length > 0 ? "text-emerald-400" : "text-zinc-400"}
         />
         <MetricBox
-          label="Triangular P&L"
+          label="P&L triangular"
           value={`${triProfit >= 0 ? "+" : ""}$${triProfit.toFixed(2)}`}
-          subtitle={`on $1,000 notional/cycle`}
+          subtitle={`sobre $1,000 notional/ciclo`}
           valueClass={
             triProfit > 0
               ? "text-emerald-400"
@@ -1430,22 +1430,22 @@ function TriangularPanel({
 
       {opps.length === 0 ? (
         <div className="glass rounded-2xl p-6 text-center text-sm text-zinc-500">
-          Waiting for full triangle (BTC/USDT + ETH/USDT + ETH/BTC) on at
-          least one exchange…
+          Esperando los 3 pares (BTC/USDT + ETH/USDT + ETH/BTC) en al menos
+          un exchange…
         </div>
       ) : (
         <div className="overflow-x-auto glass rounded-2xl">
           <table className="w-full text-sm">
             <thead className="bg-white/[0.02] text-[10px] font-semibold uppercase tracking-[0.18em] text-zinc-500">
               <tr>
-                <th className="px-4 py-3 text-left font-medium">Time</th>
+                <th className="px-4 py-3 text-left font-medium">Hora</th>
                 <th className="px-4 py-3 text-left font-medium">Exchange</th>
-                <th className="px-4 py-3 text-left font-medium">Cycle</th>
-                <th className="px-4 py-3 text-right font-medium">Start</th>
+                <th className="px-4 py-3 text-left font-medium">Ciclo</th>
+                <th className="px-4 py-3 text-right font-medium">Inicio</th>
                 <th className="px-4 py-3 text-right font-medium">Final</th>
-                <th className="px-4 py-3 text-right font-medium">Net</th>
+                <th className="px-4 py-3 text-right font-medium">Neto</th>
                 <th className="px-4 py-3 text-right font-medium">%</th>
-                <th className="px-4 py-3 text-right font-medium">Verdict</th>
+                <th className="px-4 py-3 text-right font-medium">Veredicto</th>
               </tr>
             </thead>
             <tbody className="font-mono tabular-numbers">
@@ -1501,15 +1501,15 @@ function TriangularPanel({
       {trades.length > 0 ? (
         <div className="overflow-x-auto rounded-2xl border border-emerald-400/20 bg-emerald-400/[0.03]">
           <div className="px-4 py-2 text-xs font-medium uppercase tracking-wide text-emerald-400">
-            Executed triangular trades
+            Trades triangulares ejecutados
           </div>
           <table className="w-full text-sm">
             <thead className="text-xs uppercase text-zinc-500">
               <tr>
-                <th className="px-4 py-2 text-left font-medium">Time</th>
+                <th className="px-4 py-2 text-left font-medium">Hora</th>
                 <th className="px-4 py-2 text-left font-medium">Exchange</th>
-                <th className="px-4 py-2 text-left font-medium">Cycle</th>
-                <th className="px-4 py-2 text-right font-medium">Net P&amp;L</th>
+                <th className="px-4 py-2 text-left font-medium">Ciclo</th>
+                <th className="px-4 py-2 text-right font-medium">Neto</th>
                 <th className="px-4 py-2 text-right font-medium">Fees</th>
               </tr>
             </thead>
