@@ -243,17 +243,32 @@ export default function Home() {
           </div>
         </Section>
 
-        {LINEAR_PAIRS.map((pair) => (
-          <PairPanel
-            key={pair}
-            pair={pair}
-            tickers={state?.tickersByPair[pair] ?? []}
-            opportunities={state?.opportunitiesByPair[pair] ?? []}
-            exchangeStats={state?.exchangeStats ?? []}
-            profit={state?.stats.profitByPair[pair] ?? 0}
-            trades={state?.stats.tradesByPair[pair] ?? 0}
+        <Section
+          icon={Radio}
+          eyebrow="Mercado en vivo"
+          title="Escaneando 3 exchanges"
+          subtitle="Cada tick activa el pipeline completo de evaluación. Las oportunidades aparecen cuando el barrido detecta divergencias de precio entre libros."
+        >
+          <RadarScanner
+            scansPerSec={
+              state?.counters?.opportunitiesScanned !== undefined
+                ? state.counters.opportunitiesScanned
+                : undefined
+            }
+            profitableCount={state?.counters?.profitableDetected ?? 0}
           />
-        ))}
+          {LINEAR_PAIRS.map((pair) => (
+            <PairPanel
+              key={pair}
+              pair={pair}
+              tickers={state?.tickersByPair[pair] ?? []}
+              opportunities={state?.opportunitiesByPair[pair] ?? []}
+              exchangeStats={state?.exchangeStats ?? []}
+              profit={state?.stats.profitByPair[pair] ?? 0}
+              trades={state?.stats.tradesByPair[pair] ?? 0}
+            />
+          ))}
+        </Section>
 
         <Section
           icon={BookOpen}
@@ -891,6 +906,230 @@ function Section({
       </div>
       {children}
     </section>
+  );
+}
+
+/* RadarScanner — visualización tipo sonar/radar marino que comunica la idea
+   de "escanear oportunidades en el mar de precios". El sweep gira en 4s; cada
+   exchange es un nodo fijo en los anillos; cuando aparecen oportunidades
+   profitables nuevas, los pings pulsan más intensamente. */
+function RadarScanner({
+  scansPerSec,
+  profitableCount,
+}: {
+  scansPerSec: number | undefined;
+  profitableCount: number;
+}) {
+  const throughput = useThroughput(scansPerSec);
+  return (
+    <div
+      className="instrument-frame mb-6 flex flex-col items-stretch gap-6 p-5 sm:flex-row sm:items-center"
+      style={{
+        borderRadius: "2px",
+        background:
+          "linear-gradient(180deg, rgba(15,29,58,0.6) 0%, rgba(10,20,41,0.7) 100%)",
+        border: "1px solid var(--foam)",
+      }}
+    >
+      {/* Radar SVG */}
+      <div className="relative h-[180px] w-[180px] shrink-0 self-center">
+        <svg
+          viewBox="0 0 200 200"
+          className="absolute inset-0 h-full w-full"
+          aria-hidden
+        >
+          <defs>
+            <radialGradient id="radar-glow" cx="50%" cy="50%" r="50%">
+              <stop offset="0%" stopColor="#f7931a" stopOpacity="0.08" />
+              <stop offset="100%" stopColor="#f7931a" stopOpacity="0" />
+            </radialGradient>
+            <linearGradient
+              id="sweep-grad"
+              x1="0%"
+              y1="50%"
+              x2="100%"
+              y2="50%"
+            >
+              <stop offset="0%" stopColor="#f7931a" stopOpacity="0.5" />
+              <stop offset="100%" stopColor="#f7931a" stopOpacity="0" />
+            </linearGradient>
+          </defs>
+          {/* Glow del centro */}
+          <circle cx="100" cy="100" r="95" fill="url(#radar-glow)" />
+          {/* Anillos concéntricos */}
+          <circle
+            cx="100"
+            cy="100"
+            r="90"
+            fill="none"
+            stroke="var(--foam)"
+            strokeWidth="0.6"
+          />
+          <circle
+            cx="100"
+            cy="100"
+            r="65"
+            fill="none"
+            stroke="var(--foam)"
+            strokeWidth="0.5"
+            strokeDasharray="2 3"
+          />
+          <circle
+            cx="100"
+            cy="100"
+            r="40"
+            fill="none"
+            stroke="var(--foam)"
+            strokeWidth="0.5"
+            strokeDasharray="2 3"
+          />
+          <circle
+            cx="100"
+            cy="100"
+            r="15"
+            fill="none"
+            stroke="var(--mist)"
+            strokeWidth="0.5"
+          />
+          {/* Cruz de coordenadas */}
+          <line
+            x1="100"
+            y1="10"
+            x2="100"
+            y2="190"
+            stroke="var(--foam)"
+            strokeWidth="0.4"
+          />
+          <line
+            x1="10"
+            y1="100"
+            x2="190"
+            y2="100"
+            stroke="var(--foam)"
+            strokeWidth="0.4"
+          />
+          {/* Nodos fijos: los 3 exchanges en posiciones cardinales */}
+          <g>
+            {/* Binance — arriba derecha */}
+            <circle cx="155" cy="55" r="3" fill="var(--beacon)" />
+            <text
+              x="160"
+              y="50"
+              fontSize="7"
+              fill="var(--type-mute)"
+              fontFamily="var(--font-mono)"
+            >
+              BIN
+            </text>
+            {/* Coinbase — abajo derecha */}
+            <circle cx="150" cy="150" r="3" fill="var(--beacon)" />
+            <text
+              x="155"
+              y="148"
+              fontSize="7"
+              fill="var(--type-mute)"
+              fontFamily="var(--font-mono)"
+            >
+              CB
+            </text>
+            {/* Kraken — izquierda */}
+            <circle cx="40" cy="100" r="3" fill="var(--beacon)" />
+            <text
+              x="14"
+              y="98"
+              fontSize="7"
+              fill="var(--type-mute)"
+              fontFamily="var(--font-mono)"
+            >
+              KRK
+            </text>
+          </g>
+          {/* Sonar ping del centro */}
+          <circle
+            cx="100"
+            cy="100"
+            r="20"
+            fill="none"
+            stroke="var(--beacon)"
+            strokeWidth="1"
+            opacity="0"
+            className="sonar-ping"
+            style={{ transformOrigin: "100px 100px" }}
+          />
+          {/* Sweep rotando — cono de radar */}
+          <g
+            className="radar-sweep"
+            style={{ transformOrigin: "100px 100px", transformBox: "fill-box" }}
+          >
+            <path
+              d="M 100 100 L 195 75 A 95 95 0 0 1 195 125 Z"
+              fill="url(#sweep-grad)"
+            />
+            <line
+              x1="100"
+              y1="100"
+              x2="195"
+              y2="100"
+              stroke="var(--beacon)"
+              strokeWidth="1"
+              opacity="0.6"
+            />
+          </g>
+          {/* Centro */}
+          <circle cx="100" cy="100" r="2" fill="var(--beacon-warm)" />
+        </svg>
+      </div>
+
+      {/* Lecturas del instrumento */}
+      <div className="flex flex-1 flex-col gap-3 sm:flex-row sm:gap-8">
+        <div>
+          <div className="caption-nav">Throughput</div>
+          <div
+            className="font-display mt-2 text-3xl font-medium tabular-numbers leading-none"
+            style={{ color: "var(--type-ink)" }}
+          >
+            {throughput.toFixed(1)}
+            <span
+              className="ml-1 text-base"
+              style={{ color: "var(--type-faint)" }}
+            >
+              scans/s
+            </span>
+          </div>
+          <div
+            className="mt-2 text-[10px]"
+            style={{ color: "var(--type-faint)", fontFamily: "var(--font-mono)" }}
+          >
+            ventana móvil de 5s
+          </div>
+        </div>
+        <div>
+          <div className="caption-nav">Detecciones rentables</div>
+          <div
+            className="font-display mt-2 text-3xl font-medium tabular-numbers leading-none"
+            style={{ color: "var(--beacon)" }}
+          >
+            {profitableCount.toLocaleString()}
+          </div>
+          <div
+            className="mt-2 text-[10px]"
+            style={{ color: "var(--type-faint)", fontFamily: "var(--font-mono)" }}
+          >
+            netas tras el modelo de costos
+          </div>
+        </div>
+        <div className="hidden flex-1 sm:block">
+          <div className="caption-nav">Estado del barrido</div>
+          <div
+            className="font-display mt-2 text-xl italic leading-tight"
+            style={{ color: "var(--type-mute)" }}
+          >
+            “El faro escanea sin descanso.<br />
+            Lo que ilumina es lo que sobrevive.”
+          </div>
+        </div>
+      </div>
+    </div>
   );
 }
 
