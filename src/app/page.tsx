@@ -579,36 +579,62 @@ function LiveTicker({
   ethPrice: number;
 }) {
   return (
-    <div className="glass-strong rounded-3xl p-6">
-      <div className="mb-4 flex items-center justify-between">
-        <span className="text-[10px] font-semibold uppercase tracking-[0.22em] text-[var(--type-mute)]">
-          Precios mid en vivo
-        </span>
-        <Network className="h-4 w-4 text-[var(--signal-up)]" />
+    <div
+      className="instrument-frame glass-strong p-6"
+      style={{ borderRadius: "2px" }}
+    >
+      <div className="mb-5 flex items-center justify-between">
+        <span className="caption-nav">Mid de mercado · en vivo</span>
+        <div className="flex items-center gap-1.5">
+          <span
+            className="live-dot inline-block h-1 w-1 rounded-full"
+            aria-hidden
+          />
+          <Radio className="h-3 w-3 text-[var(--beacon)]" />
+        </div>
       </div>
       <div className="space-y-5">
         <div>
           <div className="flex items-baseline justify-between">
-            <span className="text-xs font-medium uppercase tracking-widest text-[var(--beacon)]/80">
+            <span className="font-display text-lg font-medium text-[var(--beacon)]">
               Bitcoin
             </span>
-            <span className="text-[10px] text-[var(--type-mute)]">BTC/USDT</span>
+            <span
+              className="text-[10px]"
+              style={{
+                fontFamily: "var(--font-mono)",
+                color: "var(--type-faint)",
+              }}
+            >
+              BTC/USDT
+            </span>
           </div>
-          <div className="mt-1 font-mono text-3xl font-semibold tabular-numbers leading-none text-[var(--type-ink)]">
+          <div className="font-display mt-2 text-3xl font-medium tabular-numbers leading-none text-[var(--type-ink)]">
             {btcPrice > 0
               ? `$${btcPrice.toLocaleString("en-US", { maximumFractionDigits: 2, minimumFractionDigits: 2 })}`
               : "—"}
           </div>
         </div>
-        <div className="h-px bg-white/[0.06]" />
+        <div
+          className="h-px"
+          style={{ background: "var(--foam)" }}
+        />
         <div>
           <div className="flex items-baseline justify-between">
-            <span className="text-xs font-medium uppercase tracking-widest text-[var(--beacon-warm)]/80">
+            <span className="font-display text-lg font-medium text-[var(--beacon-warm)]">
               Ethereum
             </span>
-            <span className="text-[10px] text-[var(--type-mute)]">ETH/USDT</span>
+            <span
+              className="text-[10px]"
+              style={{
+                fontFamily: "var(--font-mono)",
+                color: "var(--type-faint)",
+              }}
+            >
+              ETH/USDT
+            </span>
           </div>
-          <div className="mt-1 font-mono text-3xl font-semibold tabular-numbers leading-none text-[var(--type-ink)]">
+          <div className="font-display mt-2 text-3xl font-medium tabular-numbers leading-none text-[var(--type-ink)]">
             {ethPrice > 0
               ? `$${ethPrice.toLocaleString("en-US", { maximumFractionDigits: 2, minimumFractionDigits: 2 })}`
               : "—"}
@@ -2421,12 +2447,20 @@ function EquityCurve({
   const gap = finalFaro - finalNaive;
 
   return (
-    <div className="glass rounded-2xl p-4 sm:p-6">
+    <div
+      className="instrument-frame glass p-4 sm:p-6"
+      style={{ borderRadius: "2px" }}
+    >
       <div className="mb-4 flex flex-wrap items-baseline justify-between gap-3">
-        <div className="flex items-center gap-5 text-xs">
+        <div className="flex items-center gap-6 text-xs">
           <div className="flex items-center gap-2">
-            <span className="inline-block h-2 w-4 rounded bg-emerald-400" />
-            <span className="text-[var(--type-ink)] font-medium">Faro</span>
+            <span
+              className="inline-block h-[3px] w-5"
+              style={{ background: "var(--beacon)" }}
+            />
+            <span className="font-display text-base font-medium text-[var(--type-ink)]">
+              Faro
+            </span>
             <span
               className={`font-mono tabular-numbers ${finalFaro >= 0 ? "text-[var(--signal-up)]" : "text-[var(--signal-down)]"}`}
             >
@@ -2434,8 +2468,13 @@ function EquityCurve({
             </span>
           </div>
           <div className="flex items-center gap-2">
-            <span className="inline-block h-2 w-4 rounded bg-red-400" />
-            <span className="text-[var(--type-ink)] font-medium">Naive</span>
+            <span
+              className="inline-block h-[3px] w-5"
+              style={{ background: "var(--signal-down)" }}
+            />
+            <span className="font-display text-base font-medium text-[var(--type-ink)]">
+              Naive
+            </span>
             <span
               className={`font-mono tabular-numbers ${finalNaive >= 0 ? "text-[var(--signal-up)]" : "text-[var(--signal-down)]"}`}
             >
@@ -2443,8 +2482,11 @@ function EquityCurve({
             </span>
           </div>
         </div>
-        <div className="font-mono text-sm tabular-numbers text-[var(--signal-up)]">
-          gap +${gap.toFixed(2)}
+        <div className="flex items-baseline gap-2">
+          <span className="caption-nav">gap</span>
+          <span className="font-mono text-sm tabular-numbers text-[var(--beacon)]">
+            +${gap.toFixed(2)}
+          </span>
         </div>
       </div>
       <div className="h-72 w-full">
@@ -2453,45 +2495,47 @@ function EquityCurve({
             data={data}
             margin={{ top: 8, right: 8, bottom: 8, left: 8 }}
           >
-            <CartesianGrid strokeDasharray="3 3" stroke="#27272a" />
+            <CartesianGrid strokeDasharray="2 4" stroke="#1b2d4f" />
             <XAxis
               dataKey="time"
-              tick={{ fill: "#71717a", fontSize: 11 }}
-              tickLine={{ stroke: "#3f3f46" }}
-              axisLine={{ stroke: "#3f3f46" }}
+              tick={{ fill: "#5d6f8c", fontSize: 11, fontFamily: "var(--font-mono)" }}
+              tickLine={{ stroke: "#2a3f64" }}
+              axisLine={{ stroke: "#2a3f64" }}
               minTickGap={40}
             />
             <YAxis
-              tick={{ fill: "#71717a", fontSize: 11 }}
-              tickLine={{ stroke: "#3f3f46" }}
-              axisLine={{ stroke: "#3f3f46" }}
+              tick={{ fill: "#5d6f8c", fontSize: 11, fontFamily: "var(--font-mono)" }}
+              tickLine={{ stroke: "#2a3f64" }}
+              axisLine={{ stroke: "#2a3f64" }}
               tickFormatter={(v: number) => `$${v.toFixed(2)}`}
             />
             <Tooltip
               contentStyle={{
-                background: "#09090b",
-                border: "1px solid #27272a",
-                borderRadius: 12,
+                background: "#04081a",
+                border: "1px solid #2a3f64",
+                borderRadius: 2,
                 fontSize: 12,
+                fontFamily: "var(--font-mono)",
               }}
-              labelStyle={{ color: "#a1a1aa" }}
+              labelStyle={{ color: "#94a3c0" }}
               formatter={(value, name) => [
                 `$${Number(value).toFixed(2)}`,
                 name === "faro" ? "Faro (inst)" : "Naive (retail)",
               ]}
             />
-            <ReferenceLine y={0} stroke="#52525b" strokeDasharray="4 4" />
+            <ReferenceLine y={0} stroke="#2a3f64" strokeDasharray="4 4" />
             <Line
               type="monotone"
               dataKey="naive"
-              stroke="#f87171"
-              strokeWidth={2}
+              stroke="#ef4444"
+              strokeWidth={1.5}
               dot={false}
+              strokeDasharray="3 3"
             />
             <Line
               type="monotone"
               dataKey="faro"
-              stroke="#34d399"
+              stroke="#f7931a"
               strokeWidth={2.5}
               dot={false}
             />
