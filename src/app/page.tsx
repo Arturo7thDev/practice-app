@@ -2564,46 +2564,79 @@ function NaiveComparison({
   const advantage = faroNet - naive.cumulativeNet;
   return (
     <div className="grid grid-cols-1 gap-4 md:grid-cols-3">
-      <div className="glass rounded-2xl p-5">
-        <div className="flex items-center gap-2 text-[10px] font-semibold uppercase tracking-[0.2em] text-[var(--signal-up)]">
-          <Sparkles className="h-3.5 w-3.5" />
-          Faro (institucional)
+      <div
+        className="instrument-frame glass p-5"
+        style={{ borderRadius: "2px" }}
+      >
+        <div className="flex items-center gap-2 caption-nav">
+          <Sparkles className="h-3.5 w-3.5 text-[var(--beacon)]" />
+          Faro · institucional
         </div>
         <div
-          className={`mt-2.5 font-mono text-3xl font-semibold tabular-numbers ${faroNet >= 0 ? "text-[var(--signal-up)]" : "text-[var(--signal-down)]"}`}
+          className={`font-display mt-4 text-3xl font-medium tabular-numbers leading-none ${faroNet >= 0 ? "text-[var(--signal-up)]" : "text-[var(--signal-down)]"}`}
         >
           {faroNet >= 0 ? "+" : ""}${faroNet.toFixed(2)}
         </div>
-        <div className="mt-2 text-xs text-[var(--type-mute)]">
-          {faro.totalTrades} trades · filtro por NET tras 4-stack cost model
+        <div
+          className="mt-3 text-xs"
+          style={{ color: "var(--type-mute)", fontFamily: "var(--font-mono)" }}
+        >
+          {faro.totalTrades} trades · filtra por NET tras 4-stack
         </div>
       </div>
 
-      <div className="glass rounded-2xl p-5">
-        <div className="flex items-center gap-2 text-[10px] font-semibold uppercase tracking-[0.2em] text-[var(--signal-down)]">
-          <Skull className="h-3.5 w-3.5" />
-          Naive (retail 0.5%)
+      <div
+        className="instrument-frame glass p-5"
+        style={{ borderRadius: "2px" }}
+      >
+        <div className="flex items-center gap-2 caption-nav">
+          <Skull className="h-3.5 w-3.5 text-[var(--signal-down)]" />
+          Naive · retail 0.5%
         </div>
         <div
-          className={`mt-2.5 font-mono text-3xl font-semibold tabular-numbers ${naive.cumulativeNet >= 0 ? "text-[var(--signal-up)]" : "text-[var(--signal-down)]"}`}
+          className={`font-display mt-4 text-3xl font-medium tabular-numbers leading-none ${naive.cumulativeNet >= 0 ? "text-[var(--signal-up)]" : "text-[var(--signal-down)]"}`}
         >
           {naive.cumulativeNet >= 0 ? "+" : ""}${naive.cumulativeNet.toFixed(2)}
         </div>
-        <div className="mt-2 text-xs text-[var(--type-mute)]">
-          {naive.totalTrades} trades · filtro solo por GROSS positivo
+        <div
+          className="mt-3 text-xs"
+          style={{ color: "var(--type-mute)", fontFamily: "var(--font-mono)" }}
+        >
+          {naive.totalTrades} trades · filtra solo por GROSS positivo
         </div>
       </div>
 
-      <div className="rounded-2xl border border-emerald-400/30 bg-gradient-to-br from-emerald-400/10 to-transparent p-5 backdrop-blur-xl">
-        <div className="flex items-center gap-2 text-[10px] font-semibold uppercase tracking-[0.2em] text-[var(--signal-up)]">
-          <Swords className="h-3.5 w-3.5" />
-          Ventaja Faro
+      <div
+        className="instrument-frame p-5 backdrop-blur-xl"
+        style={{
+          borderRadius: "2px",
+          background:
+            "linear-gradient(135deg, rgba(247,147,26,0.12) 0%, rgba(247,147,26,0.02) 100%)",
+          border: "1px solid var(--beacon-dim)",
+        }}
+      >
+        <div className="flex items-center gap-2 caption-nav">
+          <Swords
+            className="h-3.5 w-3.5"
+            style={{ color: "var(--beacon)" }}
+          />
+          <span style={{ color: "var(--beacon-warm)" }}>Ventaja Faro</span>
         </div>
-        <div className="mt-2.5 font-mono text-3xl font-semibold tabular-numbers text-[var(--signal-up)]">
+        <div
+          className="font-display mt-4 text-3xl font-medium tabular-numbers leading-none"
+          style={{ color: "var(--beacon)" }}
+        >
           {advantage >= 0 ? "+" : ""}${advantage.toFixed(2)}
         </div>
-        <div className="mt-2 text-xs text-[var(--signal-up)]/70">
-          Diferencia neta sobre el bot retail · mismos datos, mismos exchanges
+        <div
+          className="mt-3 text-xs"
+          style={{
+            color: "var(--beacon-warm)",
+            opacity: 0.7,
+            fontFamily: "var(--font-mono)",
+          }}
+        >
+          mismos datos · mismos exchanges · honestidad ≠ retail
         </div>
       </div>
     </div>
